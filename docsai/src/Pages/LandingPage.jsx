@@ -1,8 +1,12 @@
-import React from 'react'
+import React, {useState} from 'react'
+import TextEditor from '../components/TextEditor'
 
-const LandingPage = () => {
+function LandingPage() {
+
   return (
-    <div>LandingPage</div>
+    <div>
+        <TextEditor />
+    </div>
   )
 }
 
