@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import './editor.css';
+import './editor.css'; // Assuming you have custom styles here
 import CustomToolbar from './CustomToolbar';
 
 const TextEditor = () => {
@@ -15,10 +15,9 @@ const TextEditor = () => {
     }
   };
 
+  // Function to fetch suggestions from backend
   const fetchSuggestions = async (text) => {
     try {
-      console.log('Sending text for suggestions:', text);
-
       const response = await fetch('http://localhost:5001/api/suggestions', {
         method: 'POST',
         headers: {
@@ -28,10 +27,10 @@ const TextEditor = () => {
       });
 
       const data = await response.json();
-      console.log('Suggestions received:', data.suggestions);
 
       if (data.suggestions.length > 0) {
-        const plainSuggestion = data.suggestions[0].replace(/<\/?[^>]+(>|$)/g, "").replace(/['"]/g, "");
+        // Extract the first suggestion
+        const plainSuggestion = data.suggestions[0];
         setCurrentSuggestion(plainSuggestion);
       } else {
         setCurrentSuggestion('');
@@ -42,24 +41,25 @@ const TextEditor = () => {
     }
   };
 
+  // Effect to fetch suggestions when value changes
   useEffect(() => {
     if (value) {
-      const lastWord = value.split(' ').pop(); 
-      fetchSuggestions(lastWord);
+      const lastWords = value.split(' ').slice(-5).join(' '); // Send only the last 5 words for suggestions
+      fetchSuggestions(lastWords);
     }
   }, [value]);
 
+  // Handle Tab key press to insert suggestion
   const handleKeyDown = (event) => {
     if (event.key === 'Tab' && currentSuggestion) {
       event.preventDefault();
       const quill = quillRef.current.getEditor();
-      const cursorPosition = quill.getSelection()?.index;
+      const cursorPosition = quill.getSelection().index;
 
-      if (cursorPosition !== undefined) {
-        quill.insertText(cursorPosition, currentSuggestion);
-        quill.setSelection(cursorPosition + currentSuggestion.length);
-        setCurrentSuggestion('');
-      }
+      quill.insertText(cursorPosition, currentSuggestion);
+      quill.setSelection(cursorPosition + currentSuggestion.length);
+
+      setCurrentSuggestion('');
     }
   };
 
@@ -74,19 +74,13 @@ const TextEditor = () => {
           modules={modules}
           onKeyDown={handleKeyDown}
         />
+    
         {currentSuggestion && (
-          <div 
-            className="suggestion-overlay"
-            style={{ 
-              position: 'absolute', 
-              color: 'gray',
-              pointerEvents: 'none',
-              opacity: 0.5,
-              top: '10px', 
-              left: '5px', 
-            }}
-          >
-            {currentSuggestion}
+          <div className="suggestion-overlay">
+            {value}
+            <span style={{ color: 'grey' }}>
+              {currentSuggestion}
+            </span>
           </div>
         )}
       </div>
