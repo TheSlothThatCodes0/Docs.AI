@@ -2,14 +2,3 @@
     border: none !important;
     box-shadow: none !important;
   }
-.suggestion-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: auto; /* Make sure it's set to 'auto' when suggestions are visible */
-    opacity: 0.9; /* Adjust opacity as needed */
-    background-color: white; /* Ensure it contrasts with editor background */
-    border: 1px solid gray; /* Optional: add a border for clarity */
-    padding: 4px; /* Optional: add padding for better appearance */
-  }
-  

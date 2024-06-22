@@ -19,7 +19,7 @@ app.post('/api/suggestions', async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that provides text suggestions for autocompleting sentences or phrases in a text-editor. only provide text to complete the remaining sentence after the part already written, do not repeat it again. do not use any quotations or anything."
+          content: "You are a helpful assistant that provides text suggestions for autocompleting sentences or phrases in a text-editor. only provide text to complete the remaining sentence after the part already written, do not repeat it again. make sure the suggestion is no more than 6 words long. do not use any quotations or anything."
         },
         {
           role: "user",
@@ -28,9 +28,9 @@ app.post('/api/suggestions', async (req, res) => {
       ],
     });
     console.log('Response from OpenAI:', response.choices[0].message.content);
-    let suggestions = response.choices[0].message.content.split('\n').slice(1); 
-    suggestions = suggestions.map(suggestion => suggestion.replace(/<\/?[^>]+(>|$)/g, "").replace(/['"]/g, "").trim()); 
-    suggestions = suggestions.filter(suggestion => suggestion.length < 50); 
+    let suggestions = response.choices[0].message.content; 
+    // suggestions = suggestions.map(suggestion => suggestion.replace(/<\/?[^>]+(>|$)/g, "").replace(/['"]/g, "").trim()); 
+    // suggestions = suggestions.filter(suggestion => suggestion.length < 50); 
     console.log('Filtered Suggestions:', suggestions);
     res.json({ suggestions });
   } catch (error) {
