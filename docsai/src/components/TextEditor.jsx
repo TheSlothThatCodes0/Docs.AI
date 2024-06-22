@@ -3,6 +3,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./editor.css";
 import CustomToolbar from "./CustomToolbar";
+import MenuButtons from "./MenuButtons";
 
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -67,6 +68,7 @@ const TextEditor = () => {
   return (
     <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
       <CustomToolbar />
+      <MenuButtons />
       <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 rounded relative">
         <div className="flex felx-row-wrap">
           <ReactQuill
