@@ -4,15 +4,24 @@ import {
   faPencil,
   faFile,
   faPaperclip,
+  faPlus,
+  faFolderOpen,
+  faCopy,
+  faRotateLeft,
+  faRotateRight,
+  faImage,
+  faIcons,
+  faPhotoFilm,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function MenuButtons() {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const menuItems = [
-    { id: "edit", icon: faPencil, options: ["Option 1", "Option 2"] },
-    { id: "files", icon: faFile, options: ["Option 1", "Option 2"] },
-    { id: "insert", icon: faPaperclip, options: ["Option 1", "Option 2"] },
+    { id: "edit", icon: faPencil, options: ["New", "Open", "Make a copy"], icons: [faPlus, faFolderOpen, faCopy] },
+    { id: "files", icon: faFile, options: ["Undo", "Redo"], icons: [faRotateLeft, faRotateRight] },
+    { id: "insert", icon: faPaperclip, options: ["Image", "Emoji", "video", "Link"], icons: [faImage, faIcons, faPhotoFilm, faLink]},
   ];
 
   const handleClick = (id) => {
@@ -27,22 +36,22 @@ export default function MenuButtons() {
             <div className="flex items-center">
               <button
                 onClick={() => handleClick(item.id)}
-                className="focus:outline-none z-10"
+                className="focus:outline-none z-50"
               >
                 <FontAwesomeIcon
                   icon={item.icon}
-                  className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-white bg-opacity-20 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
+                  className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-gray-50 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
                 />
               </button>
               {openDropdown === item.id && (
-              <div className="absolute left-full top-6 ml-2 py-1 w-64 bg-white rounded-md shadow-2xl z-105"
-                  style={{ borderColor: 'gray', borderWidth: 1, borderStyle: 'solid' }}>
+              <div className="absolute left-full ml-5 py-1 w-40 bg-gray-50 rounded-md shadow-xl z-500 backdrop-blur-sm">
                 <ul>
                   {item.options.map((option, index) => (
                     <li
                       key={index}
                       className="cursor-pointer hover:bg-gray-100 p-1 ml-2 text-sm" // Reduced padding here
                     >
+                      {item.icons && item.icons[index] && <FontAwesomeIcon icon={item.icons[index]} className="mr-3" style={{color: 'grey'}}/>}
                       {option}
                     </li>
                   ))}
@@ -56,5 +65,3 @@ export default function MenuButtons() {
     </div>
   );
 }
-
-
