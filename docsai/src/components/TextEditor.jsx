@@ -89,10 +89,8 @@ const TextEditor = () => {
       setHighlightedText(text);
       setSelectionRange(selection);
       console.log("Selection range set:", selection);
-    } else {
-      setHighlightedText("");
-      setSelectionRange(null);
-    }
+    } 
+    
   };
 
   const handlePromptSubmit = async (e) => {
