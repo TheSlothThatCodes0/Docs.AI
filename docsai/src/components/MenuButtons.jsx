@@ -16,30 +16,32 @@ export default function MenuButtons() {
   ];
 
   const handleClick = (id) => {
-    setOpenDropdown(openDropdown === id ? null : id); 
+    setOpenDropdown(openDropdown === id ? null : id);
   };
-
+  
   return (
-    <div className="fixed left-12">
-      <ul className="flex flex-col items-center space-y-4">
+    <div className="fixed left-12 top-40 ">
+      <ul className="flex flex-col items-center space-y-8">
         {menuItems.map((item) => (
-          <li key={item.id}>
-            <button
-              onClick={() => handleClick(item.id)}
-              className="focus:outline-none"
-            >
-              <FontAwesomeIcon
-                icon={item.icon}
-                className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-white bg-opacity-20 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
-              />
-            </button>
-            {openDropdown === item.id && (
-              <div className="mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20">
+          <li key={item.id} className="relative">
+            <div className="flex items-center">
+              <button
+                onClick={() => handleClick(item.id)}
+                className="focus:outline-none z-10"
+              >
+                <FontAwesomeIcon
+                  icon={item.icon}
+                  className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-white bg-opacity-20 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
+                />
+              </button>
+              {openDropdown === item.id && (
+              <div className="absolute left-full top-6 ml-2 py-1 w-64 bg-white rounded-md shadow-2xl z-105"
+                  style={{ borderColor: 'gray', borderWidth: 1, borderStyle: 'solid' }}>
                 <ul>
                   {item.options.map((option, index) => (
                     <li
                       key={index}
-                      className="cursor-pointer hover:bg-gray-100 p-2"
+                      className="cursor-pointer hover:bg-gray-100 p-1 ml-2 text-sm" // Reduced padding here
                     >
                       {option}
                     </li>
@@ -47,9 +49,12 @@ export default function MenuButtons() {
                 </ul>
               </div>
             )}
+            </div>
           </li>
         ))}
       </ul>
     </div>
   );
 }
+
+
