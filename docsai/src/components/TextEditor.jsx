@@ -15,6 +15,7 @@ const TextEditor = () => {
   const [modifiedText, setModifiedText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectionRange, setSelectionRange] = useState(null);
+  const [lastFetchedValue, setLastFetchedValue] = useState("");
   const quillRef = useRef(null);
   const promptRef = useRef(null);
   const modules = {
@@ -49,37 +50,45 @@ const TextEditor = () => {
   };
 
   useEffect(() => {
-    if (value !== "") {
-      const lastWords = value.split(" ").slice(-5).join(" ");
-      fetchSuggestions(lastWords);
-    }
-  }, [value]);
+    const interval = setInterval(() => {
+      if (value !== lastFetchedValue) {
+        const lastWords = value;
+        fetchSuggestions(lastWords);
+        setLastFetchedValue(value);
+      }
+    }, 1000);
 
-  const handleKeyDown = useCallback((event) => {
-    if (event.key === "Tab" && currentSuggestion) {
-      event.preventDefault();
-      const quill = quillRef.current.getEditor();
-      const cursorPosition = quill.getSelection().index;
+    return () => clearInterval(interval);
+  }, [value, lastFetchedValue]);
 
-      quill.insertText(cursorPosition, currentSuggestion);
-      quill.setSelection(cursorPosition + currentSuggestion.length);
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (event.key === "Tab" && currentSuggestion) {
+        event.preventDefault();
+        const quill = quillRef.current.getEditor();
+        var cursorPosition = quill.getSelection().index;
+        cursorPosition -= 1;
+        quill.insertText(cursorPosition, currentSuggestion);
+        quill.setSelection(cursorPosition + currentSuggestion.length);
 
-      setCurrentSuggestion("");
-    }
-    if (event.key === "/" && highlightedText) {
-      event.preventDefault();
-      const quill = quillRef.current.getEditor();
-      const range = quill.getSelection();
-      console.log("Slash pressed. Selection range:", range);
-      setSelectionRange(range);
-      const bounds = quill.getBounds(range.index, range.length);
-      setPromptPosition({ top: bounds.bottom + 10, left: bounds.left });
-      setShowPrompt(true);
-      console.log("Setting showPrompt to true");
-      setTimeout(() => promptRef.current?.focus(), 0);
-    }
-  }, [currentSuggestion, highlightedText]);
-  
+        setCurrentSuggestion("");
+      }
+      if (event.key === "/" && highlightedText) {
+        event.preventDefault();
+        const quill = quillRef.current.getEditor();
+        const range = quill.getSelection();
+        console.log("Slash pressed. Selection range:", range);
+        setSelectionRange(range);
+        const bounds = quill.getBounds(range.index, range.length);
+        setPromptPosition({ top: bounds.bottom + 10, left: bounds.left });
+        setShowPrompt(true);
+        console.log("Setting showPrompt to true");
+        setTimeout(() => promptRef.current?.focus(), 0);
+      }
+    },
+    [currentSuggestion, highlightedText]
+  );
+
   const handleTextSelect = () => {
     const quill = quillRef.current.getEditor();
     const selection = quill.getSelection();
@@ -89,8 +98,7 @@ const TextEditor = () => {
       setHighlightedText(text);
       setSelectionRange(selection);
       console.log("Selection range set:", selection);
-    } 
-    
+    }
   };
 
   const handlePromptSubmit = async (e) => {
@@ -98,20 +106,24 @@ const TextEditor = () => {
     console.log("handlePromptSubmit called");
     console.log("Current promptInput:", promptInput);
     console.log("Current highlightedText:", highlightedText);
-  
+
     setIsLoading(true);
     try {
       const quill = quillRef.current.getEditor();
       const currentSelection = quill.getSelection();
       console.log("Current selection:", currentSelection);
-  
-      let textToModify = highlightedText || (currentSelection ? quill.getText(currentSelection.index, currentSelection.length) : "");
+
+      let textToModify =
+        highlightedText ||
+        (currentSelection
+          ? quill.getText(currentSelection.index, currentSelection.length)
+          : "");
       console.log("Text to modify:", textToModify);
-  
+
       if (!textToModify) {
         console.warn("No text selected or highlighted. Using empty string.");
       }
-  
+
       const response = await fetch("http://localhost:5001/api/modify", {
         method: "POST",
         headers: {
@@ -119,7 +131,7 @@ const TextEditor = () => {
         },
         body: JSON.stringify({ text: textToModify, prompt: promptInput }),
       });
-  
+
       const data = await response.json();
       console.log("Received modified text:", data.modifiedText);
       setModifiedText(data.modifiedText);
@@ -144,7 +156,9 @@ const TextEditor = () => {
       quill.insertText(selectionRange.index, modifiedText);
       quill.setSelection(selectionRange.index + modifiedText.length);
     } else {
-      console.error("Cannot replace text: selectionRange or modifiedText is missing");
+      console.error(
+        "Cannot replace text: selectionRange or modifiedText is missing"
+      );
     }
 
     setShowPrompt(false);
@@ -160,8 +174,8 @@ const TextEditor = () => {
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
-      quill.on('text-change', (delta, oldDelta, source) => {
-        if (source === 'user') {
+      quill.on("text-change", (delta, oldDelta, source) => {
+        if (source === "user") {
           setValue(quill.root.innerHTML);
         }
       });
@@ -188,51 +202,65 @@ const TextEditor = () => {
       <CustomToolbar />
       <MenuButtons />
       <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 rounded relative">
-      <ReactQuill
-        ref={quillRef}
-        value={value}
-        onChange={setValue}
-        modules={modules}
-        onChangeSelection={handleTextSelect}
-      />
+        <ReactQuill
+          ref={quillRef}
+          value={value}
+          onChange={setValue}
+          modules={modules}
+          onChangeSelection={handleTextSelect}
+        />
 
         {currentSuggestion && (
           <span className="text-gray-400 mt-2">{currentSuggestion}</span>
         )}
 
-{showPrompt && (
+        {showPrompt && (
           <div
-            className="prompt-modal"
+            // className="prompt-modal"
+            className="bg-gray-400 bg-opacity-20 backdrop-blur-md p-2 shadow z-10 rounded-2xl"
             style={{
-              position: 'absolute',
-              top: `${promptPosition.top}px`,
+              position: "absolute",
+              top: `${promptPosition.top+20}px`,
               left: `${promptPosition.left}px`,
             }}
           >
-          {console.log("Rendering prompt modal")}
-          <form onSubmit={handlePromptSubmit}>
+            {console.log("Rendering prompt modal")}
+            <form onSubmit={handlePromptSubmit}>
               <input
                 ref={promptRef}
                 type="text"
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder="Enter your modification"
-                className="prompt-input"
+                // className="prompt-input"
+                className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-2 rounded-2xl text-md"
               />
-              <button 
-                type="submit" 
-                className="prompt-submit" 
+              <button
+                type="submit"
+                // className="prompt-submit"
+                className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500"
                 onClick={() => console.log("Submit button clicked")}
               >
                 {isLoading ? "Loading..." : "Submit"}
               </button>
-              <button type="button" className="prompt-cancel" onClick={handleDiscard}>Cancel</button>
+              <button
+                type="button"
+                // className="prompt-cancel"
+                className="bg-red-700 bg-opacity-10 p-1.5 rounded-2xl ml-2 text-md text-red-500"
+                onClick={handleDiscard}
+              >
+                Cancel
+              </button>
             </form>
             {modifiedText && (
               <div className="modified-text-container">
                 <p className="modified-text">{modifiedText}</p>
-                <button onClick={handleReplace} className="prompt-replace">Replace</button>
-                <button onClick={handleDiscard} className="prompt-discard">Discard</button>
+                <button onClick={handleReplace} className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500">
+                  Replace
+                </button>
+                <button onClick={handleDiscard} className="bg-red-700 bg-opacity-10 p-1.5 rounded-2xl ml-2 text-md text-red-500">
+                  Discard
+                </button>
               </div>
             )}
           </div>

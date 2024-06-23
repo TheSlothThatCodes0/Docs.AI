@@ -4,12 +4,13 @@
   }
   .prompt-modal {
     background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    /* border: 1px solid #ccc; */
+    backdrop-filter: blur(40px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 10px;
     z-index: 1000;
     max-width: 300px;
+    opacity: .4;
   }
   
   .prompt-input {
