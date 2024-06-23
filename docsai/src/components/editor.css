@@ -2,3 +2,93 @@
     border: none !important;
     box-shadow: none !important;
   }
+  .prompt-modal {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 1000;
+    max-width: 300px;
+  }
+  
+  .prompt-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .prompt-submit,
+  .prompt-cancel,
+  .prompt-replace,
+  .prompt-discard {
+    padding: 6px 12px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+  
+  .prompt-submit {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .prompt-submit:hover:not(:disabled) {
+    background-color: #45a049;
+  }
+  
+  .prompt-submit:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .prompt-cancel,
+  .prompt-discard {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .prompt-cancel:hover,
+  .prompt-discard:hover {
+    background-color: #da190b;
+  }
+  
+  .prompt-replace {
+    background-color: #008CBA;
+    color: white;
+  }
+  
+  .prompt-replace:hover {
+    background-color: #007a9e;
+  }
+  
+  .modified-text-container {
+    margin-top: 10px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+  }
+  
+  .modified-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .prompt-submit:hover {
+    background-color: #45a049;
+  }
+  
+  .prompt-cancel {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .prompt-cancel:hover {
+    background-color: #da190b;
+  }

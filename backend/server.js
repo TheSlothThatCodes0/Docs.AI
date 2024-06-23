@@ -10,6 +10,7 @@ const openai = new OpenAI({
 });
 app.use(bodyParser.json());
 app.use(cors());
+
 app.post('/api/suggestions', async (req, res) => {
   const { text } = req.body;
   console.log('Received text:', text);
@@ -28,16 +29,41 @@ app.post('/api/suggestions', async (req, res) => {
       ],
     });
     console.log('Response from OpenAI:', response.choices[0].message.content);
-    let suggestions = response.choices[0].message.content; 
-    // suggestions = suggestions.map(suggestion => suggestion.replace(/<\/?[^>]+(>|$)/g, "").replace(/['"]/g, "").trim()); 
-    // suggestions = suggestions.filter(suggestion => suggestion.length < 50); 
-    console.log('Filtered Suggestions:', suggestions);
+    let suggestions = response.choices[0].message.content;
     res.json({ suggestions });
   } catch (error) {
-    console.error('Error fetching suggestions:', error.response ? error.response.data : error.message); 
+    console.error('Error fetching suggestions:', error.response ? error.response.data : error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post('/api/modify', async (req, res) => {
+  const { text, prompt } = req.body;
+  console.log('Received text:', text);
+  console.log('Received prompt:', prompt);
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that modifies text based on user input. The user will provide a text to modify and a prompt for how to modify it."
+        },
+        {
+          role: "user",
+          content: `Text: ${text}\nPrompt: ${prompt}`,
+        }
+      ],
+    });
+    console.log('Response from OpenAI:', response.choices[0].message.content);
+    let modifiedText = response.choices[0].message.content;
+    res.json({ modifiedText });
+  } catch (error) {
+    console.error('Error modifying text:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

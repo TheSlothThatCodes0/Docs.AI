@@ -1,5 +1,5 @@
 
-import TextEditor from '../components/TextEditor'
+import TextEditor from '../Components/TextEditor'
 
 function LandingPage() {
 
