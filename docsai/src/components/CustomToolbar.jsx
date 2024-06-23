@@ -1,7 +1,7 @@
 import React from 'react';
 
 const CustomToolbar = () => (
-  <div id="toolbar" className="fixed top-0 left-45 right-45 bg-white bg-opacity-20 backdrop-blur-sm p-2 shadow z-50 flex justify-center rounded-2xl rounded-tr rounded-tl">
+  <div id="toolbar" className="fixed top-0 left-45 right-45 bg-gray-50 bg-opacity-20 backdrop-blur-sm p-2 shadow z-50 flex justify-center rounded-2xl rounded-tr rounded-tl">
     <div className="flex flex-wrap items-center justify-center gap-2 m-4">
       <select className="ql-font" />
       <select className="ql-header">

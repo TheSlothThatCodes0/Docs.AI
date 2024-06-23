@@ -4,6 +4,7 @@ import "react-quill/dist/quill.snow.css";
 import "./editor.css";
 import CustomToolbar from "./CustomToolbar";
 import MenuButtons from "./MenuButtons";
+import ShareAndProfile from "./ShareAndProfile";
 
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -201,7 +202,8 @@ const TextEditor = () => {
     <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
       <CustomToolbar />
       <MenuButtons />
-      <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 rounded relative">
+      <ShareAndProfile />
+      <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 rounded relative">
         <ReactQuill
           ref={quillRef}
           value={value}
@@ -220,8 +222,8 @@ const TextEditor = () => {
             className="bg-gray-400 bg-opacity-20 backdrop-blur-md p-2 shadow z-10 rounded-2xl"
             style={{
               position: "absolute",
-              top: `${promptPosition.top+20}px`,
-              left: `${promptPosition.left}px`,
+              top: `${promptPosition.top+35}px`,
+              left: `${promptPosition.left + 30}px`,
             }}
           >
             {console.log("Rendering prompt modal")}
