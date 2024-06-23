@@ -64,6 +64,32 @@ app.post('/api/modify', async (req, res) => {
   }
 });
 
+app.post('/api/auto-title', async (req, res) => {
+  const { text } = req.body;
+  console.log('Received text:', text);
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that generates a title for a document based on its content. The user will provide the content of the document. The title should be 4 words or less, and your output should be only the title and nothing else, no quotations or anything."
+        },
+        {
+          role: "user",
+          content: text +'\n\n\nonly out the sole title. 1-4 words only. only the title, no quotations, nothing',
+        }
+      ],
+    });
+    console.log('Response from OpenAI:', response.choices[0].message.content);
+    let title = response.choices[0].message.content;
+    res.json({ title });
+  } catch (error) {
+    console.error('Error generating title:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

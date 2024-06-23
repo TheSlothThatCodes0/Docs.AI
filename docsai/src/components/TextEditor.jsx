@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, {createContext,useContext, useState, useRef, useEffect, useCallback } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./editor.css";
 import CustomToolbar from "./CustomToolbar";
 import MenuButtons from "./MenuButtons";
-
+import AutoTitle from "./AutoTitle";
+const ValueContext = createContext();
 const TextEditor = () => {
   const [value, setValue] = useState("");
   const [currentSuggestion, setCurrentSuggestion] = useState("");
@@ -18,6 +19,7 @@ const TextEditor = () => {
   const [lastFetchedValue, setLastFetchedValue] = useState("");
   const quillRef = useRef(null);
   const promptRef = useRef(null);
+
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -182,6 +184,8 @@ const TextEditor = () => {
     }
   }, []);
 
+
+
   const handleDiscard = () => {
     setShowPrompt(false);
     setPromptInput("");
@@ -198,7 +202,9 @@ const TextEditor = () => {
   }, [handleKeyDown]);
 
   return (
+    <ValueContext.Provider value={value}>
     <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
+      <AutoTitle />
       <CustomToolbar />
       <MenuButtons />
       <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 rounded relative">
@@ -267,7 +273,10 @@ const TextEditor = () => {
         )}
       </div>
     </div>
+    </ValueContext.Provider>
   );
+
 };
 
 export default TextEditor;
+export const useValue = () => useContext(ValueContext);
