@@ -22,6 +22,9 @@ const TextEditor = () => {
   const [lastFetchedValue, setLastFetchedValue] = useState("");
   const quillRef = useRef(null);
   const promptRef = useRef(null);
+  const [isPromptMode, setIsPromptMode] = useState(false);
+  const [promptStart, setPromptStart] = useState(null);
+  
 
   const modules = {
     toolbar: {
@@ -66,35 +69,118 @@ const TextEditor = () => {
     return () => clearInterval(interval);
   }, [value, lastFetchedValue]);
 
+  const exitPromptMode = useCallback(() => {
+    console.log("Exiting prompt mode");
+    const quill = quillRef.current.getEditor();
+    quill.formatText(promptStart, quill.getLength() - promptStart, { color: "black" });
+    setIsPromptMode(false);
+    setPromptStart(null);
+  }, [promptStart]);
+
+  const handleTextChange = useCallback((delta, oldDelta, source) => {
+    console.log("Text changed, source:", source);
+    if (source === "user") {
+      const quill = quillRef.current.getEditor();
+      setValue(quill.root.innerHTML);
+      if (isPromptMode) {
+        console.log("Formatting text in prompt mode");
+        const currentPosition = quill.getSelection() ? quill.getSelection().index : quill.getLength();
+        quill.formatText(promptStart, currentPosition - promptStart, { color: "blue" });
+      }
+    }
+  }, [isPromptMode, promptStart]);
+
+  const generateParagraph = useCallback(async (prompt) => {
+    try {
+      console.log("Generating paragraph with prompt:", prompt);
+      const response = await fetch("http://localhost:5001/api/generate-paragraph", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("Generated paragraph:", data.paragraph);
+      const generatedParagraph = data.paragraph;
+  
+      const quill = quillRef.current.getEditor();
+      quill.deleteText(promptStart, quill.getLength() - promptStart);
+      quill.insertText(promptStart, generatedParagraph);
+      quill.setSelection(promptStart + generatedParagraph.length);
+  
+      exitPromptMode();
+    } catch (error) {
+      console.error("Error generating paragraph:", error);
+      alert("Failed to generate paragraph. Please try again.");
+      exitPromptMode();
+    }
+  }, [promptStart, exitPromptMode]);
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.key === "Tab" && currentSuggestion) {
+      console.log("Key pressed:", event.key);
+    const quill = quillRef.current.getEditor();
+    const selection = quill.getSelection();
+    console.log("Current selection:", selection);
+  
+      if (event.key === "p" && !isPromptMode) {
+        const position = selection ? selection.index : 0;
+        const [leaf, offset] = quill.getLeaf(position);
+        const leafText = leaf.text;
+        console.log("Leaf text:", leafText, "Offset:", offset);
+  
+        if (offset > 0 && leafText[offset - 1] === "/") {
+          console.log("'/p' detected, entering prompt mode");
+          setIsPromptMode(true);
+          setPromptStart(position - 1);
+          quill.formatText(position - 1, 2, { color: "blue" });
+          console.log("Prompt mode activated, start position:", position - 1);
+        }
+      } else if (event.key === "Enter" && isPromptMode) {
+        console.log("Enter pressed in prompt mode");
         event.preventDefault();
-        const quill = quillRef.current.getEditor();
+        const promptEnd = quill.getSelection() ? quill.getSelection().index : quill.getLength();
+        const promptText = quill.getText(promptStart, promptEnd - promptStart).trim();
+        console.log("Prompt text:", promptText);
+        
+        if (promptText.startsWith("/p ")) {
+          console.log("Generating paragraph with prompt:", promptText.slice(3));
+          generateParagraph(promptText.slice(3));
+        } else {
+          console.log("Invalid prompt, exiting prompt mode");
+          exitPromptMode();
+        }
+      } else if (event.key === "Escape" && isPromptMode) {
+        console.log("Escape pressed, exiting prompt mode");
+        event.preventDefault();
+        exitPromptMode();
+      } else if (event.key === "Tab" && currentSuggestion) {
+        event.preventDefault();
         var cursorPosition = quill.getSelection().index;
         cursorPosition -= 1;
         quill.insertText(cursorPosition, currentSuggestion);
         quill.setSelection(cursorPosition + currentSuggestion.length);
-
         setCurrentSuggestion("");
-      }
-      if (event.key === "/" && highlightedText) {
+      } else if (event.key === "/" && highlightedText) {
         event.preventDefault();
-        const quill = quillRef.current.getEditor();
-        const range = quill.getSelection();
-        console.log("Slash pressed. Selection range:", range);
-        setSelectionRange(range);
-        const bounds = quill.getBounds(range.index, range.length);
-        setPromptPosition({ top: bounds.bottom + 10, left: bounds.left });
-        setShowPrompt(true);
-        console.log("Setting showPrompt to true");
-        setTimeout(() => promptRef.current?.focus(), 0);
+      console.log("Slash pressed with highlighted text. Selection range:", selection);
+      setSelectionRange(selection);
+      const bounds = quill.getBounds(selection.index, selection.length);
+      setPromptPosition({ top: bounds.bottom + 10, left: bounds.left });
+      setShowPrompt(true);
+      console.log("Setting showPrompt to true");
+      setTimeout(() => promptRef.current?.focus(), 0);
       }
     },
-    [currentSuggestion, highlightedText]
+    [isPromptMode, promptStart, generateParagraph, exitPromptMode, currentSuggestion, highlightedText]
   );
 
-  const handleTextSelect = () => {
+  const handleTextSelect = useCallback(() => {
     const quill = quillRef.current.getEditor();
     const selection = quill.getSelection();
     if (selection && selection.length > 0) {
@@ -103,32 +189,32 @@ const TextEditor = () => {
       setHighlightedText(text);
       setSelectionRange(selection);
       console.log("Selection range set:", selection);
+    } else if (!showPrompt) {
+      setHighlightedText("");
+      setSelectionRange(null);
     }
-  };
+  }, [showPrompt]);
 
   const handlePromptSubmit = async (e) => {
     e.preventDefault();
     console.log("handlePromptSubmit called");
     console.log("Current promptInput:", promptInput);
-    console.log("Current highlightedText:", highlightedText);
-
+  
     setIsLoading(true);
     try {
       const quill = quillRef.current.getEditor();
-      const currentSelection = quill.getSelection();
+      const currentSelection = quill.getSelection() || selectionRange;
       console.log("Current selection:", currentSelection);
-
-      let textToModify =
-        highlightedText ||
-        (currentSelection
-          ? quill.getText(currentSelection.index, currentSelection.length)
-          : "");
+  
+      let textToModify = currentSelection
+        ? quill.getText(currentSelection.index, currentSelection.length)
+        : highlightedText || "";
       console.log("Text to modify:", textToModify);
-
+  
       if (!textToModify) {
         console.warn("No text selected or highlighted. Using empty string.");
       }
-
+  
       const response = await fetch("http://localhost:5001/api/modify", {
         method: "POST",
         headers: {
@@ -136,12 +222,12 @@ const TextEditor = () => {
         },
         body: JSON.stringify({ text: textToModify, prompt: promptInput }),
       });
-
+  
       const data = await response.json();
       console.log("Received modified text:", data.modifiedText);
       setModifiedText(data.modifiedText);
-      if (selectionRange) {
-        setSelectionRange(selectionRange);
+      if (currentSelection) {
+        setSelectionRange(currentSelection);
       }
     } catch (error) {
       console.error("Error modifying text:", error);
@@ -150,27 +236,30 @@ const TextEditor = () => {
     }
   };
 
-  const handleReplace = () => {
+  const handleReplace = useCallback(() => {
     console.log("Replace button clicked");
-    console.log("Current selection range:", selectionRange);
+    const quill = quillRef.current.getEditor();
+    const currentSelection = quill.getSelection() || selectionRange;
+    console.log("Current selection range:", currentSelection);
     console.log("Modified text:", modifiedText);
-
-    if (selectionRange && modifiedText) {
-      const quill = quillRef.current.getEditor();
-      quill.deleteText(selectionRange.index, selectionRange.length);
-      quill.insertText(selectionRange.index, modifiedText);
-      quill.setSelection(selectionRange.index + modifiedText.length);
+  
+    if (currentSelection && modifiedText) {
+      quill.deleteText(currentSelection.index, currentSelection.length);
+      quill.insertText(currentSelection.index, modifiedText);
+      quill.setSelection(currentSelection.index + modifiedText.length);
+      setValue(quill.root.innerHTML);
+      setShowPrompt(false);
+      setPromptInput("");
+      setModifiedText("");
+      setHighlightedText(""); 
+      setSelectionRange(null);
     } else {
       console.error(
-        "Cannot replace text: selectionRange or modifiedText is missing"
+        "Cannot replace text: selection range or modifiedText is missing",
+        { currentSelection, modifiedText }
       );
     }
-
-    setShowPrompt(false);
-    setPromptInput("");
-    setModifiedText("");
-    setSelectionRange(null);
-  };
+  }, [selectionRange, modifiedText, setValue]);
 
   useEffect(() => {
     console.log("Quill content updated:", value);
@@ -179,15 +268,54 @@ const TextEditor = () => {
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
-      quill.on("text-change", (delta, oldDelta, source) => {
+      quill.on('selection-change', handleTextSelect);
+      return () => {
+        quill.off('selection-change', handleTextSelect);
+      };
+    }
+  }, [handleTextSelect]);
+
+ 
+ //-----------------------------DO NOT CHANGE ANYTHING BELOW THIS----------------------------------------------------------------
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      quill.on('text-change', handleTextChange);
+      quill.on('selection-change', handleTextSelect);
+      quill.root.addEventListener("keydown", handleKeyDown);
+      return () => {
+        quill.off('text-change', handleTextChange);
+        quill.off('selection-change', handleTextSelect);
+        quill.root.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [handleKeyDown, handleTextChange, handleTextSelect, handleReplace]);
+
+  
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      const handleTextChange = (delta, oldDelta, source) => {
+        console.log("Text changed, source:", source);
         if (source === "user") {
           setValue(quill.root.innerHTML);
+          if (isPromptMode) {
+            console.log("Formatting text in prompt mode");
+            const currentPosition = quill.getSelection() ? quill.getSelection().index : quill.getLength();
+            quill.formatText(promptStart, currentPosition - promptStart, { color: "blue" });
+          }
         }
-      });
+      };
+      quill.on("text-change", handleTextChange);
+      return () => {
+        quill.off("text-change", handleTextChange);
+      };
     }
-  }, []);
+  }, [isPromptMode, promptStart, setValue]);
 
-
+ //-------------------------------DO NOT CHANGE ANYTHING ABOVE THIS-----------------------------------------------------------------------------
 
   const handleDiscard = () => {
     setShowPrompt(false);
@@ -265,7 +393,17 @@ const TextEditor = () => {
             {modifiedText && (
               <div className="modified-text-container">
                 <p className="modified-text">{modifiedText}</p>
-                <button onClick={handleReplace} className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500">
+                <button 
+                  onClick={() => {
+                    console.log("Replace button clicked in JSX");
+                    const quill = quillRef.current.getEditor();
+                    const currentSelection = quill.getSelection() || selectionRange;
+                    console.log("Current selection range:", currentSelection);
+                    console.log("Current modified text:", modifiedText);
+                    handleReplace();
+                  }} 
+                  className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500"
+                >
                   Replace
                 </button>
                 <button onClick={handleDiscard} className="bg-red-700 bg-opacity-10 p-1.5 rounded-2xl ml-2 text-md text-red-500">

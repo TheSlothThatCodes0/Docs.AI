@@ -93,3 +93,8 @@
   .prompt-cancel:hover {
     background-color: #da190b;
   }
+  
+  .suggestion {
+    z-index: 1;
+    white-space: pre;
+  }

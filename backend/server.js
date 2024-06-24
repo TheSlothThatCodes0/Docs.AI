@@ -90,6 +90,32 @@ app.post('/api/auto-title', async (req, res) => {
   }
 });
 
+app.post('/api/generate-paragraph', async (req, res) => {
+  const { prompt } = req.body;
+  console.log('Received prompt');
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that generates a paragraph based on user input. The user will provide a prompt for the paragraph."
+        },
+        {
+          role: "user",
+          content: prompt,
+        }
+      ],
+    });
+    console.log('Response from OpenAI:', response.choices[0].message.content);
+    let paragraph = response.choices[0].message.content;
+    res.json({ paragraph });
+  } catch (error) {
+    console.error('Error generating paragraph:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
