@@ -116,6 +116,30 @@ app.post('/api/generate-paragraph', async (req, res) => {
   }
 });
 
+app.post('/api/chat-window', async (req, res) => {
+  const { messages } = req.body;
+  const { value } = req.body;
+  console.log('Received messages:', messages);
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that provides responses to user messages in a chat window. The user will provide the chat messages. This is the context that you might need in order to answer the user's queries. You are basically a chatbot that answers questions from a text-editor, and you can answer from the current text that is in the text box.\n\n\n That text: "+value
+        },
+        ...messages,  
+      ],
+    });
+    console.log('Response from OpenAI:', response.choices[0].message.content);
+    let reply = response.choices[0].message.content;
+    res.json({ reply });
+  } catch (error) {
+    console.error('Error fetching reply:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.message });
+  } 
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

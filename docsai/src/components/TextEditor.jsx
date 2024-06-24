@@ -13,6 +13,7 @@ import CustomToolbar from "./CustomToolbar";
 import MenuButtons from "./MenuButtons";
 import ShareAndProfile from "./ShareAndProfile";
 import AutoTitle from "./AutoTitle";
+import ChatWindow from "./ChatWindow";
 const ValueContext = createContext();
 
 const TextEditor = () => {
@@ -453,7 +454,12 @@ const TextEditor = () => {
             </div>
           )}
         </div>
-      </div>
+
+
+   
+      <ChatWindow />
+    </div>
+
     </ValueContext.Provider>
   );
 };
