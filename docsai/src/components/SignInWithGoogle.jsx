@@ -14,17 +14,13 @@ function SignInWithGoogle() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      console.log("User: ", user);
       if (user) {
-        await setDoc(doc(db, 'Users', user.uid), {
-          email: user.email,
-          firstName: user.displayName,
-          photo: user.photoURL,
-          lastName: '',
-        });
-        toast.success('User logged in Successfully', {
-          position: 'top-center',
-        });
-        navigate('/editor'); // Navigate to the text editor component after login
+        console.log('User logged in Successfully');
+        toast.success("User logged in Successfully", {
+            position: "top-center",
+          });
+        window.location.href = '/editor';
       }
     } catch (error) {
       console.error('Error logging in with Google: ', error);

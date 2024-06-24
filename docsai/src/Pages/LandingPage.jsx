@@ -28,7 +28,7 @@ function LandingPage() {
             
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/editor" element={user ? <TextEditor /> : <Navigate to="/login" />} />
+            <Route path="/editor" element={<TextEditor /> } />
           </Routes>
           <ToastContainer />
         </div>
