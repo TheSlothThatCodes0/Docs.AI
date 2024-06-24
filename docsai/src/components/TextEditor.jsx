@@ -142,21 +142,67 @@ const TextEditor = () => {
     },
     [promptStart, exitPromptMode]
   );
+
+  const generateImage = useCallback(
+    async (prompt) => {
+      try {
+        console.log("Generating image with prompt:", prompt);
+        const response = await fetch("http://localhost:5001/api/image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        const generatedImage = data.image; // stores the url of the image provided
+        console.log("Generated image:", generatedImage);
+        const imageResponse = await fetch(generatedImage); // downloads the image from the url provided
+        console.log("Image response:", imageResponse);
+        if (!imageResponse.ok) {
+          throw new Error(`HTTP error! status: ${imageResponse.status}`);
+        }
+
+        const blob = await imageResponse.blob();
+        const imageURL = URL.createObjectURL(blob); // stores the downloaded image in a URL object
+
+        const quill = quillRef.current.getEditor();
+        quill.deleteText(promptStart, quill.getLength() - promptStart); // removing the pormopt text
+        quill.insertEmbed(promptStart, "image", imageURL); // inserting the image at the prompt position
+        quill.setSelection(promptStart + 1);
+
+        exitPromptMode();
+      } catch (error) {
+        console.error("Error generating image:", error);
+        alert("Failed to generate image. Please try again.");
+        exitPromptMode();
+      }
+    },
+    [promptStart, exitPromptMode]
+  );
+
+
   const handleKeyDown = useCallback(
     (event) => {
       console.log("Key pressed:", event.key);
       const quill = quillRef.current.getEditor();
       const selection = quill.getSelection();
       console.log("Current selection:", selection);
-
-      if (event.key === "p" && !isPromptMode) {
+  
+      if (!isPromptMode && (event.key === "p" || event.key === "i")) {
         const position = selection ? selection.index : 0;
         const [leaf, offset] = quill.getLeaf(position);
         const leafText = leaf.text;
         console.log("Leaf text:", leafText, "Offset:", offset);
-
+  
         if (offset > 0 && leafText[offset - 1] === "/") {
-          console.log("'/p' detected, entering prompt mode");
+          console.log(`'/${event.key}' detected, entering prompt mode`);
           setIsPromptMode(true);
           setPromptStart(position - 1);
           quill.formatText(position - 1, 2, { color: "blue" });
@@ -172,10 +218,13 @@ const TextEditor = () => {
           .getText(promptStart, promptEnd - promptStart)
           .trim();
         console.log("Prompt text:", promptText);
-
+  
         if (promptText.startsWith("/p ")) {
           console.log("Generating paragraph with prompt:", promptText.slice(3));
           generateParagraph(promptText.slice(3));
+        } else if (promptText.startsWith("/i ")) {
+          console.log("Generating image with prompt:", promptText.slice(3));
+          generateImage(promptText.slice(3));
         } else {
           console.log("Invalid prompt, exiting prompt mode");
           exitPromptMode();
@@ -209,6 +258,7 @@ const TextEditor = () => {
       isPromptMode,
       promptStart,
       generateParagraph,
+      generateImage,
       exitPromptMode,
       currentSuggestion,
       highlightedText,
@@ -230,7 +280,8 @@ const TextEditor = () => {
     }
   }, [showPrompt]);
 
-  const handlePromptSubmit = async (e) => {
+  // this is the function for the text-selection prompt
+  const handlePromptSubmit = async (e) => { 
     e.preventDefault();
     console.log("handlePromptSubmit called");
     console.log("Current promptInput:", promptInput);
@@ -271,6 +322,7 @@ const TextEditor = () => {
     }
   };
 
+  // helper function to replace the text
   const handleReplace = useCallback(() => {
     console.log("Replace button clicked");
     const quill = quillRef.current.getEditor();

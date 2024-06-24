@@ -140,6 +140,25 @@ app.post('/api/chat-window', async (req, res) => {
   } 
 });
 
+app.post('/api/image', async (req, res) => {
+  const { prompt } = req.body;
+  console.log('Received prompt', prompt);
+  try {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      quality: 'hd'
+    });
+    console.log('Response from OpenAI:', response.data);
+    let image = response.data[0].url;
+    console.log('Image URL:', image);
+    res.json({ image });
+  } catch (error) {
+    console.error('Error generating image:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
