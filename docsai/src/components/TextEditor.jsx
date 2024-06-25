@@ -83,13 +83,7 @@ const TextEditor = () => {
     setFilteredContent(filtered);
   }, [value, filterContent]);
 
-  useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      quill.focus();
-      quill.setSelection(0, 0);
-    }
-  }, []);
+ 
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,6 +96,14 @@ const TextEditor = () => {
 
     return () => clearInterval(interval);
   }, [value, lastFetchedValue]);
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      quill.focus();
+      quill.setSelection(0, 0);
+    }
+  }, []);
 
   const exitPromptMode = useCallback(() => {
     console.log("Exiting prompt mode");
