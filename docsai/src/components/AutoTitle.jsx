@@ -5,14 +5,14 @@ import { useValue } from './TextEditor';
 const AutoTitle = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('Untitled Document');
-  const value = useValue();
+  const { filteredContent } = useValue();
+
   const handleTitleClick = () => {
     setIsEditing(true);
   };
 
   const handleInputChange = (e) => {
     setTitle(e.target.value);
-    console.log('value', value)
   };
 
   const handleInputBlur = () => {
@@ -47,9 +47,9 @@ const AutoTitle = () => {
   const handleAutoTitleClick = async () => {
     try {
       console.log('Generating auto title...')
-      console.log("value:", value)
-      if (value) {
-        const autoTitle = await getAutoTitle(value); 
+      console.log("Filtered content:", filteredContent)
+      if (filteredContent) {
+        const autoTitle = await getAutoTitle(filteredContent); 
         setTitle(autoTitle);
       } else {
         console.log('No content to generate title from');

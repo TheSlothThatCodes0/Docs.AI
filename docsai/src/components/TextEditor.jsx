@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useContext,
@@ -31,6 +32,7 @@ const TextEditor = () => {
   const promptRef = useRef(null);
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [promptStart, setPromptStart] = useState(null);
+  const [filteredContent, setFilteredContent] = useState("");
  
   const modules = {
     toolbar: {
@@ -62,6 +64,32 @@ const TextEditor = () => {
       setCurrentSuggestion("");
     }
   };
+
+  const filterContent = useCallback((content) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    
+    // Remove all img tags
+    const imgs = tempDiv.getElementsByTagName('img');
+    while (imgs.length > 0) {
+      imgs[0].parentNode.removeChild(imgs[0]);
+    }
+    
+    return tempDiv.innerText;
+  }, []);
+
+  useEffect(() => {
+    const filtered = filterContent(value);
+    setFilteredContent(filtered);
+  }, [value, filterContent]);
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      quill.focus();
+      quill.setSelection(0, 0);
+    }
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -163,10 +191,10 @@ const TextEditor = () => {
         const generatedImage = data.image;
   
         console.log(
-          `http://localhost:5000/proxy?url=${encodeURIComponent(generatedImage)}`
+          `http://localhost:5002/proxy?url=${encodeURIComponent(generatedImage)}`
         );
   
-        const proxyUrl = `http://localhost:5000/proxy?url=${encodeURIComponent(
+        const proxyUrl = `http://localhost:5002/proxy?url=${encodeURIComponent(
           generatedImage
         )}`;
   
@@ -441,9 +469,9 @@ const TextEditor = () => {
   }, [handleKeyDown]);
 
   return (
-    <ValueContext.Provider value={value}>
+    <ValueContext.Provider value={{ fullContent: value, filteredContent }}>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-        <AutoTitle />
+        <AutoTitle content={filteredContent} />
         <CustomToolbar />
         <MenuButtons />
         <ShareAndProfile />
@@ -526,7 +554,7 @@ const TextEditor = () => {
             </div>
           )}
         </div>
-        <ChatWindow />
+        <ChatWindow content={filteredContent} />
       </div>
     </ValueContext.Provider>
   );
@@ -534,3 +562,4 @@ const TextEditor = () => {
 
 export default TextEditor;
 export const useValue = () => useContext(ValueContext);
+

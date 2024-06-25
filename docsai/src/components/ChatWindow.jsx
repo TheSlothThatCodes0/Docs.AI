@@ -4,12 +4,11 @@ import { useValue } from './TextEditor';
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState([]);
-  const [value, setValue] = useState('');
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(false); 
+  const [isVisible, setIsVisible] = useState(false);
   const messagesEndRef = useRef(null);
-  const Value = useValue();
+  const { filteredContent } = useValue();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,7 +28,10 @@ const ChatWindow = () => {
 
     try {
       console.log('Sending request to /api/chat-window');
-      const response = await axios.post('http://localhost:5001/api/chat-window', { messages: updatedMessages, value: Value });
+      const response = await axios.post('http://localhost:5001/api/chat-window', { 
+        messages: updatedMessages, 
+        value: filteredContent  // Use filteredContent instead of Value
+      });
       console.log('Received response:', response.data);
       if (response.data && response.data.reply) {
         setMessages([...updatedMessages, { role: 'assistant', content: response.data.reply }]);
@@ -51,13 +53,13 @@ const ChatWindow = () => {
 
   return (
     <>
-      <button // Step 2: Create the Toggle Button
+      <button
         onClick={() => setIsVisible(!isVisible)}
         className="fixed right-2 top-3/4 mt-52 z-50 bg-white text-black px-4 py-2 rounded-l-lg"
       >
         {isVisible ? 'Hide bot' : 'Query Bot'}
       </button>
-      {isVisible && ( // Step 3: Adjust the Chat Window Style
+      {isVisible && (
         <div className="fixed right-0 top-1 w-80 bg-white shadow-lg flex flex-col h-5/6 mt-28 z-40 border rounded-lg">
           <div className="bg-gray-100 p-4 font-bold border rounded-lg">Chat Window</div>
           <div className="flex-1 overflow-y-auto p-4">
