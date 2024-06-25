@@ -53,13 +53,13 @@ const ChatWindow = () => {
     <>
       <button // Step 2: Create the Toggle Button
         onClick={() => setIsVisible(!isVisible)}
-        className="fixed right-10 top-32 z-50 bg-white text-black px-4 py-2 rounded-l-lg"
+        className="fixed right-2 top-3/4 mt-52 z-50 bg-white text-black px-4 py-2 rounded-l-lg"
       >
         {isVisible ? 'Hide bot' : 'Query Bot'}
       </button>
       {isVisible && ( // Step 3: Adjust the Chat Window Style
-        <div className="fixed right-0 top-2 w-80 bg-white shadow-lg flex flex-col h-5/6 mt-28 z-40">
-          <div className="bg-gray-100 p-4 font-bold">Chat Window</div>
+        <div className="fixed right-0 top-1 w-80 bg-white shadow-lg flex flex-col h-5/6 mt-28 z-40 border rounded-lg">
+          <div className="bg-gray-100 p-4 font-bold border rounded-lg">Chat Window</div>
           <div className="flex-1 overflow-y-auto p-4">
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>

@@ -14,8 +14,8 @@ import MenuButtons from "./MenuButtons";
 import ShareAndProfile from "./ShareAndProfile";
 import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
-const ValueContext = createContext();
 
+const ValueContext = createContext();
 const TextEditor = () => {
   const [value, setValue] = useState("");
   const [currentSuggestion, setCurrentSuggestion] = useState("");
@@ -31,7 +31,7 @@ const TextEditor = () => {
   const promptRef = useRef(null);
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [promptStart, setPromptStart] = useState(null);
-
+ 
   const modules = {
     toolbar: {
       container: "#toolbar",
