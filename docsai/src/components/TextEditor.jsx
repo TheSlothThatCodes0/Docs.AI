@@ -66,7 +66,7 @@ const TextEditor = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       if (value !== lastFetchedValue) {
-        const lastWords = value;
+        const lastWords = value.split(' ').slice(-5).join(' ');
         fetchSuggestions(lastWords);
         setLastFetchedValue(value);
       }
@@ -154,29 +154,51 @@ const TextEditor = () => {
           },
           body: JSON.stringify({ prompt }),
         });
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+  
         const data = await response.json();
-        
-        const generatedImage = data.image; // stores the url of the image provided
-        console.log("Generated image:", generatedImage);
-        const imageResponse = await fetch(generatedImage); // downloads the image from the url provided
+        const generatedImage = data.image;
+  
+        console.log(
+          `http://localhost:5000/proxy?url=${encodeURIComponent(generatedImage)}`
+        );
+  
+        const proxyUrl = `http://localhost:5000/proxy?url=${encodeURIComponent(
+          generatedImage
+        )}`;
+  
+        const imageResponse = await fetch(proxyUrl);
         console.log("Image response:", imageResponse);
         if (!imageResponse.ok) {
           throw new Error(`HTTP error! status: ${imageResponse.status}`);
         }
-
+  
         const blob = await imageResponse.blob();
-        const imageURL = URL.createObjectURL(blob); // stores the downloaded image in a URL object
-
+        
+        // Convert blob to base64
+        const reader = new FileReader();
+        const base64Image = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+  
+        console.log("Base64 image (first 100 chars):", base64Image.substring(0, 100));
+  
         const quill = quillRef.current.getEditor();
-        quill.deleteText(promptStart, quill.getLength() - promptStart); // removing the pormopt text
-        quill.insertEmbed(promptStart, "image", imageURL); // inserting the image at the prompt position
+  
+        // Insert the image into Quill
+        quill.deleteText(promptStart, quill.getLength() - promptStart);
+        const delta = quill.insertEmbed(promptStart, 'image', base64Image);
+        console.log("Inserted image delta:", delta);
+  
+        // Log the content of the editor after insertion
+        console.log("Editor content after insert:", quill.getContents());
+  
         quill.setSelection(promptStart + 1);
-
+  
         exitPromptMode();
       } catch (error) {
         console.error("Error generating image:", error);
@@ -186,21 +208,19 @@ const TextEditor = () => {
     },
     [promptStart, exitPromptMode]
   );
-
-
   const handleKeyDown = useCallback(
     (event) => {
       console.log("Key pressed:", event.key);
       const quill = quillRef.current.getEditor();
       const selection = quill.getSelection();
       console.log("Current selection:", selection);
-  
+
       if (!isPromptMode && (event.key === "p" || event.key === "i")) {
         const position = selection ? selection.index : 0;
         const [leaf, offset] = quill.getLeaf(position);
         const leafText = leaf.text;
         console.log("Leaf text:", leafText, "Offset:", offset);
-  
+
         if (offset > 0 && leafText[offset - 1] === "/") {
           console.log(`'/${event.key}' detected, entering prompt mode`);
           setIsPromptMode(true);
@@ -218,7 +238,7 @@ const TextEditor = () => {
           .getText(promptStart, promptEnd - promptStart)
           .trim();
         console.log("Prompt text:", promptText);
-  
+
         if (promptText.startsWith("/p ")) {
           console.log("Generating paragraph with prompt:", promptText.slice(3));
           generateParagraph(promptText.slice(3));
@@ -281,7 +301,7 @@ const TextEditor = () => {
   }, [showPrompt]);
 
   // this is the function for the text-selection prompt
-  const handlePromptSubmit = async (e) => { 
+  const handlePromptSubmit = async (e) => {
     e.preventDefault();
     console.log("handlePromptSubmit called");
     console.log("Current promptInput:", promptInput);
@@ -349,7 +369,7 @@ const TextEditor = () => {
   }, [selectionRange, modifiedText, setValue]);
 
   useEffect(() => {
-    console.log("Quill content updated:", value);
+    // console.log("Quill content updated:", value);
   }, [value]);
 
   useEffect(() => {
@@ -506,12 +526,8 @@ const TextEditor = () => {
             </div>
           )}
         </div>
-
-
-   
-      <ChatWindow />
-    </div>
-
+        <ChatWindow />
+      </div>
     </ValueContext.Provider>
   );
 };

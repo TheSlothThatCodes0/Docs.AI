@@ -36,6 +36,7 @@ const CustomToolbar = () => (
       <select className="ql-background" />
       <select className="ql-align" />
       <button className="ql-clean" />
+      <button className='ql-image' />
     </div>
   </div>
 );

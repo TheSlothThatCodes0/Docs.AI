@@ -147,7 +147,8 @@ app.post('/api/image', async (req, res) => {
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
-      quality: 'hd'
+      // quality: 'hd'
+      // style: 'natural'
     });
     console.log('Response from OpenAI:', response.data);
     let image = response.data[0].url;
