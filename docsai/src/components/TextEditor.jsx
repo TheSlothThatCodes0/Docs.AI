@@ -15,7 +15,10 @@ import MenuButtons from "./MenuButtons";
 import ShareAndProfile from "./ShareAndProfile";
 import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
-
+import { storage } from "./Firebase";
+import { ref, uploadBytes } from "firebase/storage";
+import { onAuthStateChanged, getAuth} from "firebase/auth";
+const auth = getAuth();
 const ValueContext = createContext();
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -462,6 +465,30 @@ const TextEditor = () => {
     setSelectionRange(null);
   };
 
+  const handleSave = async () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+      const userID = user.uid;
+      const quill = quillRef.current.getEditor();
+      const delta = quill.getContents();
+      const blob = new Blob([JSON.stringify(delta)], { type: "application/json" });
+
+      const storageRef = ref(storage, `users/${userID}/documents/` + Date.now() + ".json");
+
+      try {
+        uploadBytes(storageRef, blob);
+        alert("Document saved successfully!");
+      } catch (error) {
+        console.error("Error saving document:", error);
+        alert("Failed to save document. Please try again.");
+      }
+      } else {
+        console.log("User is not authenticated.");
+        alert("Please sign in to save your document.");
+      }
+    });
+  };
+
   useEffect(() => {
     const quill = quillRef.current.getEditor();
     quill.root.addEventListener("keydown", handleKeyDown);
@@ -476,7 +503,7 @@ const TextEditor = () => {
         <AutoTitle content={filteredContent} />
         <CustomToolbar />
         <MenuButtons />
-        <ShareAndProfile />
+        <ShareAndProfile handleSave={handleSave} />
         <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
           <ReactQuill
             ref={quillRef}
