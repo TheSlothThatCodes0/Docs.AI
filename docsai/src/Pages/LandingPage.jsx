@@ -7,6 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { auth } from '../components/Firebase';
 import '../components/Auth.css';
+import Files from '../components/Files';
 
 function LandingPage() {
   const [user, setUser] = useState(null);
@@ -26,9 +27,10 @@ function LandingPage() {
           <Routes>
             <Route path="/" element={user ? <Navigate to="/editor" /> : <Navigate to="/login" />} />
             
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={user ? <Navigate to="/editor" /> : <Navigate to="/login" />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/editor" element={<TextEditor /> } />
+            <Route path="/editor" element={user ? <TextEditor/>: <Navigate to="/login" /> } />
+            <Route path= "/files" element={user ? <Files/> : <Navigate to="/login" />} />
           </Routes>
           <ToastContainer />
         </div>

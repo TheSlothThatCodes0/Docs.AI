@@ -13,20 +13,26 @@ import {
   faIcons,
   faPhotoFilm,
   faLink,
+  faShare,
 } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 export default function MenuButtons() {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const navigate = useNavigate();
 
   const menuItems = [
     { id: "edit", icon: faPencil, options: ["New", "Open", "Make a copy"], icons: [faPlus, faFolderOpen, faCopy] },
-    { id: "files", icon: faFile, options: ["Undo", "Redo"], icons: [faRotateLeft, faRotateRight] },
     { id: "insert", icon: faPaperclip, options: ["Image", "Emoji", "video", "Link"], icons: [faImage, faIcons, faPhotoFilm, faLink]},
   ];
 
   const handleClick = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
+
+  const handleFileClick = () => {
+    navigate('/files');
+  }
   
   return (
     <div className="fixed left-12 top-40 ">
@@ -61,6 +67,23 @@ export default function MenuButtons() {
             </div>
           </li>
         ))}
+
+
+          <button className="focus:outline-none z-50">
+            <FontAwesomeIcon
+              icon={faFile}
+              className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-gray-50 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
+              onClick={handleFileClick}
+            />
+          </button>
+          <button className="focus:outline-none z-50">
+            <FontAwesomeIcon
+              icon={faShare}
+              className="text-3xl cursor-pointer w-6 h-6 rounded-full bg-gray-50 backdrop-blur-sm p-2 shadow z-50 shadow-md p-3"
+            />
+          </button>
+
+
       </ul>
     </div>
   );

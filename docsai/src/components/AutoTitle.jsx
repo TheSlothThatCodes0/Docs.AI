@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import AI from '../assets/AI.png';
 import { useValue } from './TextEditor';
 
-const AutoTitle = () => {
+const AutoTitle = ({ title, setTitle }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState('Untitled Document');
   const { filteredContent } = useValue();
 
   const handleTitleClick = () => {
@@ -31,11 +30,11 @@ const AutoTitle = () => {
         },
         body: JSON.stringify({ text }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       return data.title;
     } catch (error) {
@@ -46,10 +45,10 @@ const AutoTitle = () => {
 
   const handleAutoTitleClick = async () => {
     try {
-      console.log('Generating auto title...')
-      console.log("Filtered content:", filteredContent)
+      console.log('Generating auto title...');
+      console.log("Filtered content:", filteredContent);
       if (filteredContent) {
-        const autoTitle = await getAutoTitle(filteredContent); 
+        const autoTitle = await getAutoTitle(filteredContent);
         setTitle(autoTitle);
       } else {
         console.log('No content to generate title from');
@@ -75,7 +74,7 @@ const AutoTitle = () => {
           {title}
         </h1>
       )}
-  
+
       <button onClick={handleAutoTitleClick} className="ml-2">
         <img className='h-9 w-10 mt-1 -ml-1' src={AI} alt="Generate Title" />
       </button>

@@ -12,14 +12,19 @@ import "react-quill/dist/quill.snow.css";
 import "./editor.css";
 import CustomToolbar from "./CustomToolbar";
 import MenuButtons from "./MenuButtons";
-import ShareAndProfile from "./ShareAndProfile";
+import ShareAndProfile from "./SaveAndProfile";
 import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
 import { storage } from "./Firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { onAuthStateChanged, getAuth} from "firebase/auth";
+import {toPng} from "html-to-image";
 const auth = getAuth();
 const ValueContext = createContext();
+
+
+
+
 const TextEditor = () => {
   const [value, setValue] = useState("");
   const [currentSuggestion, setCurrentSuggestion] = useState("");
@@ -36,7 +41,7 @@ const TextEditor = () => {
   const [isPromptMode, setIsPromptMode] = useState(false);
   const [promptStart, setPromptStart] = useState(null);
   const [filteredContent, setFilteredContent] = useState("");
- 
+  const [title, setTitle] = useState("Untitled Document");
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -466,28 +471,51 @@ const TextEditor = () => {
   };
 
   const handleSave = async () => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-      const userID = user.uid;
-      const quill = quillRef.current.getEditor();
-      const delta = quill.getContents();
-      const blob = new Blob([JSON.stringify(delta)], { type: "application/json" });
-
-      const storageRef = ref(storage, `users/${userID}/documents/` + Date.now() + ".json");
-
-      try {
-        uploadBytes(storageRef, blob);
-        alert("Document saved successfully!");
-      } catch (error) {
-        console.error("Error saving document:", error);
-        alert("Failed to save document. Please try again.");
-      }
+        const userID = user.uid;
+        const quill = quillRef.current.getEditor();
+        const delta = quill.getContents();
+        const contentBlob = new Blob([JSON.stringify(delta)], { type: "application/json" });
+  
+        // Generate thumbnail as an image with fixed dimensions
+        const editorElement = document.querySelector('.ql-editor');
+  
+        // Create a temporary div to clone the editor content
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = editorElement.innerHTML;
+        tempDiv.style.width = '500px';
+        tempDiv.style.height = '600px';
+        tempDiv.style.overflow = 'hidden';  // To handle any overflow of content
+  
+        document.body.appendChild(tempDiv);
+  
+        try {
+          const thumbnailDataUrl = await toPng(tempDiv, { quality: 0.1 });
+          const thumbnailBlob = await (await fetch(thumbnailDataUrl)).blob();
+  
+          document.body.removeChild(tempDiv);
+  
+          const basePath = `users/${userID}/documents/${title}`;
+          const contentRef = ref(storage, `${basePath}/file_contents.json`);
+          const thumbnailRef = ref(storage, `${basePath}/file_thumbnail.png`);
+  
+          await uploadBytes(contentRef, contentBlob);
+          await uploadBytes(thumbnailRef, thumbnailBlob);
+  
+          alert("Document and thumbnail saved successfully!");
+        } catch (error) {
+          document.body.removeChild(tempDiv);
+          console.error("Error saving document and thumbnail:", error);
+          alert("Failed to save document and thumbnail. Please try again.");
+        }
       } else {
         console.log("User is not authenticated.");
         alert("Please sign in to save your document.");
       }
     });
   };
+
 
   useEffect(() => {
     const quill = quillRef.current.getEditor();
@@ -500,10 +528,10 @@ const TextEditor = () => {
   return (
     <ValueContext.Provider value={{ fullContent: value, filteredContent }}>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-        <AutoTitle content={filteredContent} />
+        <AutoTitle content={filteredContent} title={title} setTitle = {setTitle} />
         <CustomToolbar />
         <MenuButtons />
-        <ShareAndProfile handleSave={handleSave} />
+        <ShareAndProfile handleSave={handleSave}/>
         <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
           <ReactQuill
             ref={quillRef}
