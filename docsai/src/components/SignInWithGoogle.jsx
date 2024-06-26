@@ -2,13 +2,9 @@ import React from 'react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from './Firebase';
 import { toast } from 'react-toastify';
-import { setDoc, doc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
 import '../components/Auth.css';
 
 function SignInWithGoogle() {
-  const navigate = useNavigate();
-
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -18,8 +14,17 @@ function SignInWithGoogle() {
       if (user) {
         console.log('User logged in Successfully');
         toast.success("User logged in Successfully", {
-            position: "top-center",
-          });
+          position: "top-center",
+        });
+
+        // Extract the user's profile picture URL
+        const profilePicUrl = user.photoURL;
+        console.log("Profile Picture URL: ", profilePicUrl);
+
+        // Save the profile picture URL in a variable or store it in your state management system
+        // For example, using localStorage:
+        localStorage.setItem('userProfilePicUrl', profilePicUrl);
+
         window.location.href = '/editor';
       }
     } catch (error) {
@@ -44,4 +49,3 @@ function SignInWithGoogle() {
 }
 
 export default SignInWithGoogle;
-
