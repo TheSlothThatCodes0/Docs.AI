@@ -55,12 +55,12 @@ const ChatWindow = () => {
     <>
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className="fixed right-2 top-3/4 mt-52 z-50 bg-white text-black px-4 py-2 rounded-l-lg"
+        className="fixed right-2 bottom-4 mt-40 z-50 bg-white text-black px-4 py-2 rounded-l-lg"
       >
         {isVisible ? 'Hide bot' : 'Query Bot'}
       </button>
       {isVisible && (
-        <div className="fixed right-0 top-1 w-80 bg-white shadow-lg flex flex-col h-5/6 mt-28 z-40 border rounded-lg">
+        <div className="fixed right-3 top-1 bottom-20 w-80 bg-white shadow-lg flex flex-col mt-28 z-40 border rounded-lg">
           <div className="bg-gray-100 p-4 font-bold border rounded-lg">Chat Window</div>
           <div className="flex-1 overflow-y-auto p-4">
             {messages.map((message, index) => (

@@ -477,7 +477,7 @@ const TextEditor = () => {
         <CustomToolbar />
         <MenuButtons />
         <ShareAndProfile />
-        <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 rounded relative">
+        <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
           <ReactQuill
             ref={quillRef}
             value={value}

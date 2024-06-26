@@ -60,7 +60,7 @@ const AutoTitle = () => {
   };
 
   return (
-    <div className="absolute top-2 left-2 p-4 flex items-center">
+    <div className="fixed top-2 left-2 p-4 flex items-center">
       {isEditing ? (
         <input
           type="text"
