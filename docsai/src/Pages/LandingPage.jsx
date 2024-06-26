@@ -23,14 +23,13 @@ function LandingPage() {
   return (
     <div className="App">
       <div className="auth-wrapper">
-        <div >
+        <div>
           <Routes>
             <Route path="/" element={user ? <Navigate to="/editor" /> : <Navigate to="/login" />} />
-            
-            <Route path="/login" element={user ? <Navigate to="/editor" /> : <Navigate to="/login" />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/editor" element={user ? <TextEditor/>: <Navigate to="/login" /> } />
-            <Route path= "/files" element={user ? <Files/> : <Navigate to="/login" />} />
+            <Route path="/login" element={user ? <Navigate to="/editor" /> : <Login />} />
+            <Route path="/register" element={user ? <Navigate to="/editor" /> : <Register />} />
+            <Route path="/editor" element={user ? <TextEditor /> : <Navigate to="/login" />} />
+            <Route path="/files" element={user ? <Files /> : <Navigate to="/login" />} />
           </Routes>
           <ToastContainer />
         </div>

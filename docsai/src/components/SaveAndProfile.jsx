@@ -1,11 +1,14 @@
-import { faFloppyDisk, faShare, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faFloppyDisk, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import React from 'react';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ShareAndProfile({handleSave}) {
+  const [showLogout, setShowLogout] = useState(false);
   const profilePicUrl = localStorage.getItem('userProfilePicUrl');
   const auth = getAuth();
+  const navigate = useNavigate();
 
   const handleSaveWithAuth = () => {
     onAuthStateChanged(auth, (user) => {
@@ -14,8 +17,19 @@ export default function ShareAndProfile({handleSave}) {
       } else {
         console.log('User is not authenticated.');
         // Redirect to sign-in page or show a sign-in prompt
+        navigate('/login');
       }
     });
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('userProfilePicUrl');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
   };
 
   return (
@@ -33,6 +47,7 @@ export default function ShareAndProfile({handleSave}) {
           <button
             type="button"
             className="p-0 rounded-full h-12 w-12 flex items-center justify-center overflow-hidden shadow-md"
+            onClick={() => setShowLogout(!showLogout)}
           >
             {profilePicUrl ? (
               <img
@@ -46,6 +61,15 @@ export default function ShareAndProfile({handleSave}) {
               </div>
             )}
           </button>
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="absolute right-0 mt-2 bg-white shadow-md p-2 rounded-md flex items-center text-sm"
+            >
+              <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+              Logout
+            </button>
+          )}
         </div>
       </div>
     </div>
