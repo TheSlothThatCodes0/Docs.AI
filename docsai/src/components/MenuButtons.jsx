@@ -16,32 +16,57 @@ import {
   faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { Document, Packer, Paragraph, TextRun } from "docx";
+import { Document, Packer, Paragraph, TextRun, ImageRun } from "docx";
 import { useValue } from './TextEditor';
 
 export default function MenuButtons() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
-  const { fullContent, title } = useValue();
+  const { fullContent, title, quillRef } = useValue();
 
   const handleDownload = async () => {
     try {
-      // Create a new document
+      const quill = quillRef.current.getEditor();
+      const delta = quill.getContents(); //gets the contents of the document
+  
+      const children = delta.ops.map((op) => {
+        if (op.insert && typeof op.insert === 'string') {
+          return new Paragraph({
+            children: [new TextRun(op.insert)],
+          });
+        } else if (op.insert && op.insert.image) {
+          const base64String = op.insert.image.split(',')[1];
+          const imageBuffer = Uint8Array.from(atob(base64String), (c) =>
+            c.charCodeAt(0)
+          );
+  
+          return new Paragraph({
+            children: [
+              new ImageRun({
+                data: imageBuffer,
+                transformation: {
+                  width: 300, 
+                  height: 300, 
+                },
+              }),
+            ],
+          });
+        }
+        return null;
+      }).filter((child) => child !== null);
+  
       const doc = new Document({
-        sections: [{
-          properties: {},
-          children: fullContent.split('\n').map(line => 
-            new Paragraph({
-              children: [new TextRun(line)],
-            })
-          ),
-        }],
+        sections: [
+          {
+            properties: {},
+            children,
+          },
+        ],
       });
-
-      // Generate and download the document
+  
       const blob = await Packer.toBlob(doc);
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `${title}.docx`;
       document.body.appendChild(link);
@@ -50,7 +75,7 @@ export default function MenuButtons() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error generating DOCX:", error);
-      // Here you might want to show an error message to the user
+      alert("Failed to generate DOCX. Please try again.");
     }
   };
 

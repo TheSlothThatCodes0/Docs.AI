@@ -199,51 +199,44 @@ const TextEditor = () => {
           },
           body: JSON.stringify({ prompt }),
         });
-  
+    
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
+    
         const data = await response.json();
         const generatedImage = data.image;
-  
-        console.log(
-          `http://localhost:5002/proxy?url=${encodeURIComponent(generatedImage)}`
-        );
-  
+    
         const proxyUrl = `http://localhost:5002/proxy?url=${encodeURIComponent(
           generatedImage
         )}`;
-  
+    
         const imageResponse = await fetch(proxyUrl);
-        console.log("Image response:", imageResponse);
         if (!imageResponse.ok) {
           throw new Error(`HTTP error! status: ${imageResponse.status}`);
         }
-  
+    
         const blob = await imageResponse.blob();
-        
-        // Convert blob to base64
-        const reader = new FileReader();
-        const base64Image = await new Promise((resolve) => {
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        });
-  
-        console.log("Base64 image (first 100 chars):", base64Image.substring(0, 100));
-  
+        const imageBitmap = await createImageBitmap(blob);
+    
+        // Resize the image
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const maxWidth = 500; 
+        const scale = maxWidth / imageBitmap.width;
+        canvas.width = maxWidth;
+        canvas.height = imageBitmap.height * scale;
+    
+        context.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+        const resizedImageDataUrl = canvas.toDataURL('image/jpeg', 0.7); // Adjust the quality here
+    
         const quill = quillRef.current.getEditor();
-  
-        // Insert the image into Quill
+    
         quill.deleteText(promptStart, quill.getLength() - promptStart);
-        const delta = quill.insertEmbed(promptStart, 'image', base64Image);
-        console.log("Inserted image delta:", delta);
-  
-        // Log the content of the editor after insertion
-        console.log("Editor content after insert:", quill.getContents());
-  
+        const delta = quill.insertEmbed(promptStart, 'image', resizedImageDataUrl);
+    
         quill.setSelection(promptStart + 1);
-  
+    
         exitPromptMode();
       } catch (error) {
         console.error("Error generating image:", error);
@@ -253,6 +246,7 @@ const TextEditor = () => {
     },
     [promptStart, exitPromptMode]
   );
+  
   const handleKeyDown = useCallback(
     (event) => {
       console.log("Key pressed:", event.key);
@@ -533,7 +527,7 @@ const TextEditor = () => {
   }, [handleKeyDown]);
 
   return (
-    <ValueContext.Provider value={{ fullContent: value, filteredContent, title }}>
+    <ValueContext.Provider value={{ fullContent: value, filteredContent, title, quillRef }}>
     <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
       <AutoTitle content={filteredContent} title={title} setTitle={setTitle} />
       <CustomToolbar />
