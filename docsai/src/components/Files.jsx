@@ -10,6 +10,18 @@ const FilesPage = () => {
   const storage = getStorage();
   const navigate = useNavigate();
 
+  const handleFileClick = async (file) => {
+    try {
+      
+
+      const blob = await getBlob(file.fileContentRef);
+      const contentJson = JSON.parse(await blob.text());
+      navigate('/editor', { state: { content: contentJson, title: file.fileName } });
+    } catch (error) {
+      console.error("Error loading file content:", error);
+    }
+  };
+
   useEffect(() => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -47,18 +59,6 @@ const FilesPage = () => {
       }
     });
   }, [auth, storage]);
-
-  const handleFileClick = async (file) => {
-    try {
-      
-
-      const blob = await getBlob(file.fileContentRef);
-      const contentJson = JSON.parse(await blob.text());
-      navigate('/editor', { state: { content: contentJson, title: file.fileName } });
-    } catch (error) {
-      console.error("Error loading file content:", error);
-    }
-  };
 
   return (
     <div className="bg-gray-200 min-h-screen">
