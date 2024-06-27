@@ -1,12 +1,4 @@
-
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useEffect, useState, useRef, useCallback, useContext, createContext } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./editor.css";
@@ -17,8 +9,10 @@ import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
 import { storage } from "./Firebase";
 import { ref, uploadBytes } from "firebase/storage";
-import { onAuthStateChanged, getAuth} from "firebase/auth";
-import {toPng} from "html-to-image";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { toPng } from "html-to-image";
+import { useLocation } from "react-router-dom";
+
 const auth = getAuth();
 const ValueContext = createContext();
 
@@ -42,6 +36,8 @@ const TextEditor = () => {
   const [promptStart, setPromptStart] = useState(null);
   const [filteredContent, setFilteredContent] = useState("");
   const [title, setTitle] = useState("Untitled Document");
+  const location = useLocation();
+  
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -90,6 +86,17 @@ const TextEditor = () => {
     const filtered = filterContent(value);
     setFilteredContent(filtered);
   }, [value, filterContent]);
+
+  useEffect(() => {
+    if (location.state && location.state.content) {
+      const quill = quillRef.current.getEditor();
+      quill.setContents(location.state.content);
+      setValue(quill.root.innerHTML);
+      if (location.state.title) {
+        setTitle(location.state.title);
+      }
+    }
+  }, [location]);
 
  
 
@@ -526,20 +533,20 @@ const TextEditor = () => {
   }, [handleKeyDown]);
 
   return (
-    <ValueContext.Provider value={{ fullContent: value, filteredContent }}>
-      <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-        <AutoTitle content={filteredContent} title={title} setTitle = {setTitle} />
-        <CustomToolbar />
-        <MenuButtons />
-        <ShareAndProfile handleSave={handleSave}/>
-        <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
-          <ReactQuill
-            ref={quillRef}
-            value={value}
-            onChange={setValue}
-            modules={modules}
-            onChangeSelection={handleTextSelect}
-          />
+    <ValueContext.Provider value={{ fullContent: value, filteredContent, title }}>
+    <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
+      <AutoTitle content={filteredContent} title={title} setTitle={setTitle} />
+      <CustomToolbar />
+      <MenuButtons />
+      <ShareAndProfile handleSave={handleSave} />
+      <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
+        <ReactQuill
+          ref={quillRef}
+          value={value}
+          onChange={setValue}
+          modules={modules}
+          onChangeSelection={handleTextSelect}
+        />
 
           {currentSuggestion && (
             <span className="text-gray-400 mt-2">{currentSuggestion}</span>

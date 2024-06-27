@@ -16,7 +16,6 @@ export default function ShareAndProfile({handleSave}) {
         handleSave();
       } else {
         console.log('User is not authenticated.');
-        // Redirect to sign-in page or show a sign-in prompt
         navigate('/login');
       }
     });
