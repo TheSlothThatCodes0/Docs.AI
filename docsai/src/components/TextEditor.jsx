@@ -35,6 +35,9 @@ const TextEditor = () => {
   const [filteredContent, setFilteredContent] = useState("");
   const [title, setTitle] = useState("Untitled Document");
   const location = useLocation();
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [isContentChanged, setIsContentChanged] = useState(false);
+  const autoSaveIntervalRef = useRef(null);
   
   const modules = {
     toolbar: {
@@ -65,6 +68,10 @@ const TextEditor = () => {
       console.error("Error fetching suggestions:", error);
       setCurrentSuggestion("");
     }
+  };
+
+  const handleAutoSaveChange = (enabled) => {
+    setAutoSaveEnabled(enabled);
   };
 
   const filterContent = useCallback((content) => {
@@ -130,10 +137,10 @@ const TextEditor = () => {
 
   const handleTextChange = useCallback(
     (delta, oldDelta, source) => {
-      console.log("Text changed, source:", source);
       if (source === "user") {
         const quill = quillRef.current.getEditor();
         setValue(quill.root.innerHTML);
+        setIsContentChanged(true);
         if (isPromptMode) {
           console.log("Formatting text in prompt mode");
           const currentPosition = quill.getSelection()
@@ -145,7 +152,7 @@ const TextEditor = () => {
         }
       }
     },
-    [isPromptMode, promptStart]
+    [isPromptMode, promptStart, setValue]
   );
 
   const generateParagraph = useCallback(
@@ -469,7 +476,7 @@ const TextEditor = () => {
     setSelectionRange(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userID = user.uid;
@@ -502,18 +509,37 @@ const TextEditor = () => {
           await uploadBytes(contentRef, contentBlob);
           await uploadBytes(thumbnailRef, thumbnailBlob);
   
-          alert("Document and thumbnail saved successfully!");
+          console.log("Document and thumbnail saved successfully!");
         } catch (error) {
           document.body.removeChild(tempDiv);
           console.error("Error saving document and thumbnail:", error);
-          alert("Failed to save document and thumbnail. Please try again.");
         }
       } else {
         console.log("User is not authenticated.");
-        alert("Please sign in to save your document.");
       }
     });
-  };
+  }, [title]);
+
+  useEffect(() => {
+    if (autoSaveEnabled) {
+      if (isContentChanged) {
+        handleSave();
+        setIsContentChanged(false);
+      }
+      autoSaveIntervalRef.current = setInterval(() => {
+        handleSave();
+      }, 120000); // 2 minutes
+    } else {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    }
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, [autoSaveEnabled, isContentChanged, handleSave]);
 
 
   useEffect(() => {
@@ -530,7 +556,7 @@ const TextEditor = () => {
       <AutoTitle content={filteredContent} title={title} setTitle={setTitle} />
       <CustomToolbar />
       <MenuButtons quillRef={quillRef} />
-      <ShareAndProfile handleSave={handleSave} />
+      <ShareAndProfile handleSave={handleSave} onAutoSaveChange={handleAutoSaveChange} />
       {/* <FilesPage quillRef={quillRef}/> */}
 
       <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
