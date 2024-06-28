@@ -46,7 +46,8 @@ const TextEditor = () => {
   const [userID, setUserID] = useState("");
   const [fileName, setFileName] = useState("");
   const autoSaveIntervalRef = useRef(null);
-
+  const editorRef = useRef(null);
+  
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -396,6 +397,21 @@ const TextEditor = () => {
     }
   };
 
+  const handleEditorClick = () => {
+    const quill = quillRef.current.getEditor();
+    quill.focus();
+  };
+  
+  useEffect(() => {
+    const editorContainer = editorRef.current;
+    if (editorContainer) {
+      editorContainer.addEventListener('click', handleEditorClick);
+      return () => {
+        editorContainer.removeEventListener('click', handleEditorClick);
+      };
+    }
+  }, []);
+
   // helper function to replace the text
   const handleReplace = useCallback(() => {
     console.log("Replace button clicked");
@@ -608,12 +624,15 @@ const TextEditor = () => {
         fileName,
 
       }}
-    >
-      <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-        <AutoTitle
-          content={filteredContent}
-          title={title}
-          setTitle={setTitle}
+      >
+
+      <div  ref={editorRef} className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
+        <ReactQuill
+          ref={quillRef}
+          value={value}
+          onChange={setValue}
+          modules={modules}
+          onChangeSelection={handleTextSelect}
         />
         <CustomToolbar />
         <MenuButtons quillRef={quillRef} />

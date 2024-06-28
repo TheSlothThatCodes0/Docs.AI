@@ -182,12 +182,12 @@ export default function MenuButtons() {
   };
 
   const menuItems = [
-    {
-      id: "edit",
-      icon: faPencil,
-      options: ["New", "Open"],
-      icons: [faPlus, faFolderOpen],
-      actions: [handleNew, handleOpen],
+    { 
+      id: "edit", 
+      icon: faPencil, 
+      options: ["New", "Open"], 
+      icons: [faPlus, faFile],
+      actions: [handleNew, handleOpen]
     },
     {
       id: "insert",
@@ -308,7 +308,7 @@ export default function MenuButtons() {
           >
             <div className="w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full border border-gray-200">
               <FontAwesomeIcon
-                icon={faFile}
+                icon={faFolderOpen}
                 className="text-gray-600 w-5 h-5"
               />
             </div>
