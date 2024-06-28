@@ -5,6 +5,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
+    "nodemailer": "^6.9.14",
     "openai": "^4.52.0"
   }
 }

@@ -1,4 +1,11 @@
-import React, { useEffect, useState, useRef, useCallback, useContext, createContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useContext,
+  createContext,
+} from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./editor.css";
@@ -11,8 +18,7 @@ import { storage } from "./Firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
-import { useLocation } from "react-router-dom"
-
+import { useLocation } from "react-router-dom";
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -37,8 +43,10 @@ const TextEditor = () => {
   const location = useLocation();
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [isContentChanged, setIsContentChanged] = useState(false);
+  const [userID, setUserID] = useState("");
+  const [fileName, setFileName] = useState("");
   const autoSaveIntervalRef = useRef(null);
-  
+
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -75,15 +83,15 @@ const TextEditor = () => {
   };
 
   const filterContent = useCallback((content) => {
-    const tempDiv = document.createElement('div');
+    const tempDiv = document.createElement("div");
     tempDiv.innerHTML = content;
-    
+
     // Remove all img tags
-    const imgs = tempDiv.getElementsByTagName('img');
+    const imgs = tempDiv.getElementsByTagName("img");
     while (imgs.length > 0) {
       imgs[0].parentNode.removeChild(imgs[0]);
     }
-    
+
     return tempDiv.innerText;
   }, []);
 
@@ -103,12 +111,10 @@ const TextEditor = () => {
     }
   }, [location]);
 
- 
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (value !== lastFetchedValue) {
-        const lastWords = value.split(' ').slice(-5).join(' ');
+        const lastWords = value.split(" ").slice(-5).join(" ");
         fetchSuggestions(lastWords);
         setLastFetchedValue(value);
       }
@@ -204,44 +210,48 @@ const TextEditor = () => {
           },
           body: JSON.stringify({ prompt }),
         });
-    
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-    
+
         const data = await response.json();
         const generatedImage = data.image;
-    
+
         const proxyUrl = `http://localhost:5002/proxy?url=${encodeURIComponent(
           generatedImage
         )}`;
-    
+
         const imageResponse = await fetch(proxyUrl);
         if (!imageResponse.ok) {
           throw new Error(`HTTP error! status: ${imageResponse.status}`);
         }
-    
+
         const blob = await imageResponse.blob();
         const imageBitmap = await createImageBitmap(blob);
-    
+
         // Resize the image
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        const maxWidth = 500; 
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const maxWidth = 500;
         const scale = maxWidth / imageBitmap.width;
         canvas.width = maxWidth;
         canvas.height = imageBitmap.height * scale;
-    
+
         context.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
-        const resizedImageDataUrl = canvas.toDataURL('image/jpeg', 0.7); // Adjust the quality here
-    
+        const resizedImageDataUrl = canvas.toDataURL("image/jpeg", 0.7); // Adjust the quality here
+
         const quill = quillRef.current.getEditor();
-    
+
         quill.deleteText(promptStart, quill.getLength() - promptStart);
-        const delta = quill.insertEmbed(promptStart, 'image', resizedImageDataUrl);
-    
+        const delta = quill.insertEmbed(
+          promptStart,
+          "image",
+          resizedImageDataUrl
+        );
+
         quill.setSelection(promptStart + 1);
-    
+
         exitPromptMode();
       } catch (error) {
         console.error("Error generating image:", error);
@@ -251,7 +261,7 @@ const TextEditor = () => {
     },
     [promptStart, exitPromptMode]
   );
-  
+
   const handleKeyDown = useCallback(
     (event) => {
       console.log("Key pressed:", event.key);
@@ -476,71 +486,108 @@ const TextEditor = () => {
     setSelectionRange(null);
   };
 
+  const [docPath, setDocPath] = useState(null);
+
   const handleSave = useCallback(async () => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userID = user.uid;
+        setUserID(user.uid);
+        console.log("User ID:", user.uid);
         const quill = quillRef.current.getEditor();
         const delta = quill.getContents();
         const contentBlob = new Blob([JSON.stringify(delta)], { type: "application/json" });
-  
-        // Generate thumbnail as an image with fixed dimensions
+        const metadata = { title: title };
+        const currentDate = new Date();
         const editorElement = document.querySelector('.ql-editor');
   
-        // Create a temporary div to clone the editor content
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = editorElement.innerHTML;
         tempDiv.style.width = '500px';
         tempDiv.style.height = '600px';
-        tempDiv.style.overflow = 'hidden';  // To handle any overflow of content
+        tempDiv.style.overflow = 'hidden';
   
         document.body.appendChild(tempDiv);
   
         try {
-          const thumbnailDataUrl = await toPng(tempDiv, { quality: 0.1 });
+          console.log("Creating thumbnail...");
+          const thumbnailDataUrl = await toPng(tempDiv, { quality: 0.3 });
           const thumbnailBlob = await (await fetch(thumbnailDataUrl)).blob();
+          const metadataBlob = new Blob([JSON.stringify(metadata)], { type: "application/json" });
+          const formattedDateTime = `${currentDate.getFullYear()}${("0" + (currentDate.getMonth() + 1)).slice(-2)}${("0" + currentDate.getDate()).slice(-2)}_${("0" + currentDate.getHours()).slice(-2)}${("0" + currentDate.getMinutes()).slice(-2)}${("0" + currentDate.getSeconds()).slice(-2)}`;
+          setFileName(formattedDateTime);
   
-          document.body.removeChild(tempDiv);
-  
-          const basePath = `users/${userID}/documents/${title}`;
+          const basePath = docPath || `users/${user.uid}/documents/${formattedDateTime}`;
           const contentRef = ref(storage, `${basePath}/file_contents.json`);
           const thumbnailRef = ref(storage, `${basePath}/file_thumbnail.png`);
-  
-          await uploadBytes(contentRef, contentBlob);
-          await uploadBytes(thumbnailRef, thumbnailBlob);
-  
-          console.log("Document and thumbnail saved successfully!");
-        } catch (error) {
+          const metadataRef = ref(storage, `${basePath}/metadata.json`);
           document.body.removeChild(tempDiv);
-          console.error("Error saving document and thumbnail:", error);
+  
+          console.log("Uploading content...");
+          await uploadBytes(contentRef, contentBlob);
+          console.log("Uploading thumbnail...");
+          await uploadBytes(thumbnailRef, thumbnailBlob);
+          console.log("Uploading metadata...");
+          await uploadBytes(metadataRef, metadataBlob);
+  
+          if (!docPath) {
+            setDocPath(basePath);
+          }
+  
+          alert("Document and thumbnail saved successfully!");
+          setIsContentChanged(false); // Reset content changed flag after save
+        } catch (error) {
+          console.error("Error during save operation:", error);
+          if (document.body.contains(tempDiv)) {
+            document.body.removeChild(tempDiv);
+          }
+          alert("Failed to save document and thumbnail. Please try again.");
         }
       } else {
         console.log("User is not authenticated.");
       }
     });
-  }, [title]);
-
+  }, [title, docPath]);
+  
   useEffect(() => {
     if (autoSaveEnabled) {
-      if (isContentChanged) {
-        handleSave();
-        setIsContentChanged(false);
+      console.log("Auto-save enabled");
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
       }
       autoSaveIntervalRef.current = setInterval(() => {
-        handleSave();
-      }, 120000); // 2 minutes
+        if (isContentChanged) {
+          console.log("Content changed detected. Saving document...");
+          handleSave();
+          setIsContentChanged(false); // Reset the content changed flag after saving
+        }
+      }, 30000); // 2 minutes
     } else {
+      console.log("Auto-save disabled");
       if (autoSaveIntervalRef.current) {
         clearInterval(autoSaveIntervalRef.current);
       }
     }
+  
     return () => {
       if (autoSaveIntervalRef.current) {
         clearInterval(autoSaveIntervalRef.current);
       }
     };
   }, [autoSaveEnabled, isContentChanged, handleSave]);
-
+  
+  useEffect(() => {
+    const quill = quillRef.current.getEditor();
+    const handleTextChange = () => {
+      console.log("Text changed");
+      setIsContentChanged(true);
+    };
+  
+    quill.on('text-change', handleTextChange);
+  
+    return () => {
+      quill.off('text-change', handleTextChange);
+    };
+  }, []);
 
   useEffect(() => {
     const quill = quillRef.current.getEditor();
@@ -551,22 +598,39 @@ const TextEditor = () => {
   }, [handleKeyDown]);
 
   return (
-    <ValueContext.Provider value={{ fullContent: value, filteredContent, title, quillRef }}>
-    <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-      <AutoTitle content={filteredContent} title={title} setTitle={setTitle} />
-      <CustomToolbar />
-      <MenuButtons quillRef={quillRef} />
-      <ShareAndProfile handleSave={handleSave} onAutoSaveChange={handleAutoSaveChange} />
-      {/* <FilesPage quillRef={quillRef}/> */}
+    <ValueContext.Provider
+      value={{
+        fullContent: value,
+        filteredContent,
+        title,
+        quillRef,
+        userID: userID,
+        fileName,
 
-      <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
-        <ReactQuill
-          ref={quillRef}
-          value={value}
-          onChange={setValue}
-          modules={modules}
-          onChangeSelection={handleTextSelect}
+      }}
+    >
+      <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
+        <AutoTitle
+          content={filteredContent}
+          title={title}
+          setTitle={setTitle}
         />
+        <CustomToolbar />
+        <MenuButtons quillRef={quillRef} />
+        <ShareAndProfile
+          handleSave={handleSave}
+          onAutoSaveChange={handleAutoSaveChange}
+        />
+        {/* <FilesPage quillRef={quillRef}/> */}
+
+        <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
+          <ReactQuill
+            ref={quillRef}
+            value={value}
+            onChange={setValue}
+            modules={modules}
+            onChangeSelection={handleTextSelect}
+          />
 
           {currentSuggestion && (
             <span className="text-gray-400 mt-2">{currentSuggestion}</span>
@@ -646,4 +710,3 @@ const TextEditor = () => {
 
 export default TextEditor;
 export const useValue = () => useContext(ValueContext);
-

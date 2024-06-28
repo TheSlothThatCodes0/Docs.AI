@@ -16,7 +16,8 @@ const FilesPage = () => {
     try {
       const blob = await getBlob(file.fileContentRef);
       const contentJson = JSON.parse(await blob.text());
-      navigate('/editor', { state: { content: contentJson, title: file.fileName } });
+      const filePath = file.fileContentRef.fullPath.replace('/file_contents.json', '');
+      navigate('/editor', { state: { content: contentJson, title: file.fileName}});
     } catch (error) {
       console.error("Error loading file content:", error);
     }
@@ -28,6 +29,7 @@ const FilesPage = () => {
       try {
         await deleteObject(file.fileContentRef);
         await deleteObject(ref(storage, file.thumbnailURL));
+        await deleteObject(ref(storage, file.metadataRef));
         setFiles(files.filter(f => f.fileName !== file.fileName));
       } catch (error) {
         console.error("Error deleting file:", error);
@@ -73,10 +75,16 @@ const FilesPage = () => {
                 storage,
                 `${basePath}/${fileName}/file_thumbnail.png`
               );
+              const metadataRef = ref(
+                storage,
+                `${basePath}/${fileName}/metadata.json`
+              );
 
+              const metadataBlob = await getBlob(metadataRef);
+              const metadata = JSON.parse(await metadataBlob.text());
               const thumbnailURL = await getDownloadURL(fileThumbnailRef);
 
-              return { fileName, fileContentRef, thumbnailURL };
+              return { fileName: metadata.title, fileContentRef, thumbnailURL, metadataRef };
             })
           );
 
