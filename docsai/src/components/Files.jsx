@@ -4,6 +4,7 @@ import { getStorage, ref, listAll, getDownloadURL, getBlob, deleteObject } from 
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faDownload, faPlus } from "@fortawesome/free-solid-svg-icons";
+import mammoth from 'mammoth';
 
 const FilesPage = () => {
   const [files, setFiles] = useState([]);
@@ -91,7 +92,7 @@ const FilesPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">My Documents</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -118,7 +119,7 @@ const FilesPage = () => {
                   </div>
                 </div>
                 <div className="p-4 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">{file.fileName}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 truncate">{file.fileName}</h2>
                 </div>
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <button 
@@ -127,12 +128,7 @@ const FilesPage = () => {
                   >
                     <FontAwesomeIcon icon={faTrash} className="text-2xl" />
                   </button>
-                  <button 
-                    onClick={(e) => handleDownload(e, file)}
-                    className="text-white p-3 rounded-full hover:bg-green-600 transition-colors duration-200 mx-4"
-                  >
-                    <FontAwesomeIcon icon={faDownload} className="text-2xl" />
-                  </button>
+                  
                 </div>
               </div>
             ))}

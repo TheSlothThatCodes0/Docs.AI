@@ -36,10 +36,10 @@ export default function ShareAndProfile({handleSave}) {
       <div className="flex flex-row items-center">
         <button
           type="button"
-          className="bg-gray-50 shadow-md p-3 rounded-2xl mr-5 flex items-center text-md"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center mr-4"
           onClick={handleSaveWithAuth}
         >
-          <FontAwesomeIcon icon={faFloppyDisk} className="h-6 mr-2" />
+          <FontAwesomeIcon icon={faFloppyDisk} className="h-4 w-4 mr-2" />
           Save
         </button>
         <div className="relative">

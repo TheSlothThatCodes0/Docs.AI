@@ -11,13 +11,11 @@ import { storage } from "./Firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom"
+
 
 const auth = getAuth();
 const ValueContext = createContext();
-
-
-
 
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -531,8 +529,10 @@ const TextEditor = () => {
     <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
       <AutoTitle content={filteredContent} title={title} setTitle={setTitle} />
       <CustomToolbar />
-      <MenuButtons />
+      <MenuButtons quillRef={quillRef} />
       <ShareAndProfile handleSave={handleSave} />
+      {/* <FilesPage quillRef={quillRef}/> */}
+
       <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
         <ReactQuill
           ref={quillRef}
