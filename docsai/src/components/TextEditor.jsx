@@ -624,15 +624,12 @@ const TextEditor = () => {
         fileName,
 
       }}
-      >
-
-      <div  ref={editorRef} className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
-        <ReactQuill
-          ref={quillRef}
-          value={value}
-          onChange={setValue}
-          modules={modules}
-          onChangeSelection={handleTextSelect}
+    >
+      <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
+        <AutoTitle
+          content={filteredContent}
+          title={title}
+          setTitle={setTitle}
         />
         <CustomToolbar />
         <MenuButtons quillRef={quillRef} />
@@ -642,7 +639,7 @@ const TextEditor = () => {
         />
         {/* <FilesPage quillRef={quillRef}/> */}
 
-        <div className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
+        <div ref={editorRef} className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
           <ReactQuill
             ref={quillRef}
             value={value}
