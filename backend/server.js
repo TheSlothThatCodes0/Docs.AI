@@ -13,13 +13,17 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: 'smtp.zoho.com',
+  port: 587,
+  secure: false, 
   auth: {
-    user: 'docs.ai.colab@gmail.com',
-    pass: 'verz jyav dvhi avan',
+    user: 'docs.ai.colab@zohomail.in',
+    pass: 'c4t@@321',
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
-
 app.post("/api/suggestions", async (req, res) => {
   const { text } = req.body;
   console.log("Received text:", text);

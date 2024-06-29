@@ -30,6 +30,7 @@ function LandingPage() {
             <Route path="/register" element={user ? <Navigate to="/editor" /> : <Register />} />
             <Route path="/editor" element={user ? <TextEditor /> : <Navigate to="/login" />} />
             <Route path="/files" element={user ? <Files /> : <Navigate to="/login" />} />
+            <Route path='/collaborate' element={user ? <Navigate to="/editor" /> : <Navigate to="/login" />} />
           </Routes>
           <ToastContainer />
         </div>

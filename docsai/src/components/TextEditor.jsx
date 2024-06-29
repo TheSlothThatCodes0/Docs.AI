@@ -15,7 +15,7 @@ import ShareAndProfile from "./SaveAndProfile";
 import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
 import { storage } from "./Firebase";
-import { ref, uploadBytes } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
@@ -111,6 +111,48 @@ const TextEditor = () => {
       }
     }
   }, [location]);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const URL_userID = queryParams.get("userID");
+    const URL_fileName = queryParams.get("fileName");
+
+    if (URL_userID && URL_fileName) {
+      setUserID(URL_userID);
+      setFileName(URL_fileName);
+      loadFileContent(URL_userID, URL_fileName);
+    }
+  }, [location]);
+
+  const loadFileContent = async (userID, fileName) => {
+    try {
+      const filePath = `users/${userID}/documents/${fileName}/file_contents.json`;
+      const fileRef = ref(storage, filePath);
+      const downloadURL = await getDownloadURL(fileRef);
+      
+      const response = await fetch(downloadURL);
+      const contentJson = await response.json();
+      
+      if (quillRef.current) {
+        const quill = quillRef.current.getEditor();
+        quill.setContents(contentJson);
+        setValue(quill.root.innerHTML);
+      }
+
+      const metadataPath = `users/${userID}/documents/${fileName}/metadata.json`;
+      const metadataRef = ref(storage, metadataPath);
+      const metadataURL = await getDownloadURL(metadataRef);
+      const metadataResponse = await fetch(metadataURL);
+      const metadata = await metadataResponse.json();
+      setTitle(metadata.title || "Untitled Document");
+
+      console.log("File content loaded successfully");
+    } catch (error) {
+      console.error("Error loading file content:", error);
+      alert("Failed to load the document. Please try again.");
+    }
+  };
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -612,6 +654,8 @@ const TextEditor = () => {
       quill.root.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
+
+
 
   return (
     <ValueContext.Provider
