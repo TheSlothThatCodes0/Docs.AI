@@ -17,8 +17,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false, 
   auth: {
-    user: 'docs.ai.colab@zohomail.in',
-    pass: 'c4t@@321',
+    user: 'docsaicolab@zohomail.com',
+    pass: 'Adies2004!!',
   },
   tls: {
     rejectUnauthorized: false
@@ -204,7 +204,7 @@ app.post("/api/send-colaboration-link", (req, res) => {
   console.log("Received email:", email);
   const colaborationLink = `http://localhost:3000/collaborate?userID=${userID}&fileName=${fileName}`;
   const mailOptions = {
-    from: "docs.ai.colab@gmail.com",
+    from: "docsaicolab@zohomail.com",
     to: email,
     subject: "Docs.AI Collaboration Invite",
     text: `You have been invited to collaborate on a document. Click on the link to start collaborating: ${colaborationLink}`,
