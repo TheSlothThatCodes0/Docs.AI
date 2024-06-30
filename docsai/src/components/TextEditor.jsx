@@ -19,6 +19,7 @@ import { ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
+import {io} from 'socket.io-client';
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -45,8 +46,10 @@ const TextEditor = () => {
   const [isContentChanged, setIsContentChanged] = useState(false);
   const [userID, setUserID] = useState("");
   const [fileName, setFileName] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
   const autoSaveIntervalRef = useRef(null);
   const editorRef = useRef(null);
+  const socketRef = useRef(null);
   
   const modules = {
     toolbar: {
@@ -117,12 +120,61 @@ const TextEditor = () => {
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
 
+    setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
+
     if (URL_userID && URL_fileName) {
       setUserID(URL_userID);
       setFileName(URL_fileName);
       loadFileContent(URL_userID, URL_fileName);
+
+      const socket = io("http://localhost:8080");
+      socketRef.current = socket;
+
+      const room = `${URL_userID}-${URL_fileName}`;
+      socket.emit("join-room", room);
+
+      socket.on('connect', () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+      });
+
+      socket.on('document-change', (delta) => {
+        console.log('Received delta:', delta);
+        if (quillRef.current) {
+          const quill = quillRef.current.getEditor();
+          quill.updateContents(delta);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
+        setIsConnected(false);
+      });
+
+      return () => {
+        socket.disconnect();
+      };
     }
   }, [location]);
+
+  useEffect(() => {
+    if (quillRef.current && isConnected) {
+      const quill = quillRef.current.getEditor();
+      
+      const handleTextChange = (delta, oldContents, source) => {
+        if (source === 'user' && socketRef.current) {
+          const room = `${userID}-${fileName}`;
+          socketRef.current.emit('document-change', { room, delta });
+        }
+      };
+
+      quill.on('text-change', handleTextChange);
+
+      return () => {
+        quill.off('text-change', handleTextChange);
+      };
+    }
+  }, [quillRef, isConnected, userID, fileName]);
 
   const loadFileContent = async (userID, fileName) => {
     try {
@@ -152,6 +204,23 @@ const TextEditor = () => {
       alert("Failed to load the document. Please try again.");
     }
   };
+
+  useEffect(() => {
+    const quill = quillRef.current.getEditor();
+
+    quill.on("text-change", (delta, oldDelta, source) => {
+      if (source === "user") {
+        const message = {room: socketRef.current.room, delta};
+        socketRef.current.emit('document-change', message);
+      }
+    });
+
+    return () => {
+      quill.off();
+    };
+  }, []);
+
+
 
 
   useEffect(() => {
@@ -307,16 +376,16 @@ const TextEditor = () => {
 
   const handleKeyDown = useCallback(
     (event) => {
-      console.log("Key pressed:", event.key);
+      // console.log("Key pressed:", event.key);
       const quill = quillRef.current.getEditor();
       const selection = quill.getSelection();
-      console.log("Current selection:", selection);
+      // console.log("Current selection:", selection);
 
       if (!isPromptMode && (event.key === "p" || event.key === "i")) {
         const position = selection ? selection.index : 0;
         const [leaf, offset] = quill.getLeaf(position);
         const leafText = leaf.text;
-        console.log("Leaf text:", leafText, "Offset:", offset);
+        // console.log("Leaf text:", leafText, "Offset:", offset);
 
         if (offset > 0 && leafText[offset - 1] === "/") {
           console.log(`'/${event.key}' detected, entering prompt mode`);
@@ -591,7 +660,7 @@ const TextEditor = () => {
             setDocPath(basePath);
           }
   
-          alert("Document and thumbnail saved successfully!");
+          // alert("Document and thumbnail saved successfully!");
           setIsContentChanged(false); // Reset content changed flag after save
         } catch (error) {
           console.error("Error during save operation:", error);
