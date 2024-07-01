@@ -165,21 +165,39 @@ const TextEditor = () => {
   }
 
 
+  useEffect(() => {
+    if (quillRef.current && socketRef.current) {
+      const quill = quillRef.current.getEditor();
+  
+      const handleDocumentChange = (data) => {
+        const { delta, userID: senderID } = data;
+        if (senderID !== currentUserID) {
+          quill.updateContents(delta);
+        }
+      };
+  
+      socketRef.current.on("document-change", handleDocumentChange);
+  
+      return () => {
+        socketRef.current.off("document-change", handleDocumentChange);
+      };
+    }
+  }, [quillRef, currentUserID]);
+
 
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-
+  
       const handleTextChange = (delta, oldContents, source) => {
         if (source === "user" && socketRef.current) {
-          isLocalChange.current = true;
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit("document-change", { room, delta });
+          socketRef.current.emit("document-change", { room, delta, userID });
         }
       };
-
+  
       quill.on("text-change", handleTextChange);
-
+  
       return () => {
         quill.off("text-change", handleTextChange);
       };

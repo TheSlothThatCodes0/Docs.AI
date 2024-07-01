@@ -29,10 +29,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('document-change', (data) => {
-    const { room, delta } = data;
-    // console.log("recieved delta", delta);
+    const { room, delta, userID } = data;
     // Broadcast the changes to all clients in the room except the sender
-    socket.to(room).emit('document-change', delta);
+    socket.to(room).emit('document-change', { delta, userID });
   });
 
   socket.on('disconnect', () => {
