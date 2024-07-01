@@ -132,9 +132,8 @@ const TextEditor = () => {
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
 
-    setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
-
-    if (URL_userID && URL_fileName) {
+    if (URL_userID !== null && URL_fileName != null) {
+      setDocPath(`users/${URL_userID}/documents/${URL_fileName}`);
       setUserID(URL_userID);
       setFileName(URL_fileName);
       loadFileContent(URL_userID, URL_fileName);
@@ -145,21 +144,21 @@ const TextEditor = () => {
       const room = `${URL_userID}-${URL_fileName}`;
       socket.emit("join-room", room);
 
-      socket.on('connect', () => {
-        console.log('WebSocket connected');
+      socket.on("connect", () => {
+        console.log("WebSocket connected");
         setIsConnected(true);
       });
 
-      socket.on('document-change', (delta) => {
-        console.log('Received delta:', delta);
+      socket.on("document-change", (delta) => {
+        console.log("Received delta:", delta);
         if (quillRef.current) {
           const quill = quillRef.current.getEditor();
           quill.updateContents(delta);
         }
       });
 
-      socket.on('disconnect', () => {
-        console.log('WebSocket disconnected');
+      socket.on("disconnect", () => {
+        console.log("WebSocket disconnected");
         setIsConnected(false);
       });
 
@@ -172,18 +171,18 @@ const TextEditor = () => {
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-      
+
       const handleTextChange = (delta, oldContents, source) => {
-        if (source === 'user' && socketRef.current) {
+        if (source === "user" && socketRef.current) {
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit('document-change', { room, delta });
+          socketRef.current.emit("document-change", { room, delta });
         }
       };
 
-      quill.on('text-change', handleTextChange);
+      quill.on("text-change", handleTextChange);
 
       return () => {
-        quill.off('text-change', handleTextChange);
+        quill.off("text-change", handleTextChange);
       };
     }
   }, [quillRef, isConnected, userID, fileName]);
@@ -193,10 +192,10 @@ const TextEditor = () => {
       const filePath = `users/${userID}/documents/${fileName}/file_contents.json`;
       const fileRef = ref(storage, filePath);
       const downloadURL = await getDownloadURL(fileRef);
-      
+
       const response = await fetch(downloadURL);
       const contentJson = await response.json();
-      
+
       if (quillRef.current) {
         const quill = quillRef.current.getEditor();
         quill.setContents(contentJson);
@@ -220,14 +219,15 @@ const TextEditor = () => {
   useEffect(() => {
     const quill = quillRef.current.getEditor();
 
-    quill.on("text-change", (delta, oldDelta, source) => {
-      console.log("Text changed, source:", source);
-      if (source === "user") {
-        const message = {room: socketRef.current.room, delta};
-        socketRef.current.emit('document-change', message);
-      }
-    });
-
+    if (isConnected) {
+      quill.on("text-change", (delta, oldDelta, source) => {
+        console.log("Text changed, source:", source);
+        if (source === "user") {
+          const message = { room: socketRef.current.room, delta };
+          socketRef.current.emit("document-change", message);
+        }
+      });
+    }
     return () => {
       quill.off();
     };
@@ -683,7 +683,7 @@ const TextEditor = () => {
           if (!docPath) {
             setDocPath(basePath);
           }
-          
+
           // alert("Document and thumbnail saved successfully!");
           setIsContentChanged(false); // Reset content changed flag after save
         } catch (error) {
