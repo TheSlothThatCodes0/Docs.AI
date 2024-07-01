@@ -207,14 +207,14 @@ const TextEditor = () => {
 
   useEffect(() => {
     const quill = quillRef.current.getEditor();
-
-    quill.on("text-change", (delta, oldDelta, source) => {
-      if (source === "user") {
-        const message = {room: socketRef.current.room, delta};
-        socketRef.current.emit('document-change', message);
-      }
-    });
-
+    if (isConnected) {
+      quill.on("text-change", (delta, oldDelta, source) => {
+        if (source === "user") {
+          const message = {room: socketRef.current.room, delta};
+          socketRef.current.emit('document-change', message);
+        }
+      });
+    }
     return () => {
       quill.off();
     };
