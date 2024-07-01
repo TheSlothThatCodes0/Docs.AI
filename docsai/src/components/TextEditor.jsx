@@ -145,15 +145,13 @@ const TextEditor = () => {
       });
 
       socket.on("document-change", (data) => {
-        if (quillRef.current && socketRef.current) {
+        if (quillRef.current) {
           const quill = quillRef.current.getEditor();
-      
-            const { delta, userID: senderID } = data;
-            console.log("Received delta:", delta);
-            console.log("Sender ID:", senderID);
-            console.log("Current user ID:", currentUserID);
-            if (senderID !== currentUserID) {
-              quill.updateContents(delta);
+  
+          const { delta } = data;
+          console.log("Received delta:", delta);
+          if (URL_userID !== currentUserID) {
+            quill.updateContents(delta);
             }
         }
       });
@@ -170,27 +168,27 @@ const TextEditor = () => {
   }
 
 
-  useEffect(() => {
-    if (quillRef.current && socketRef.current) {
-      const quill = quillRef.current.getEditor();
+  // useEffect(() => {
+  //   if (quillRef.current && socketRef.current) {
+  //     const quill = quillRef.current.getEditor();
   
-      const handleDocumentChange = (data) => {
-        const { delta, userID: senderID } = data;
-        console.log("Received delta:", delta);
-        console.log("Sender ID:", senderID);
-        console.log("Current user ID:", currentUserID);
-        if (senderID !== currentUserID) {
-          quill.updateContents(delta);
-        }
-      };
+  //     const handleDocumentChange = (data) => {
+  //       const { delta, userID: senderID } = data;
+  //       console.log("Received delta:", delta);
+  //       console.log("Sender ID:", senderID);
+  //       console.log("Current user ID:", currentUserID);
+  //       if (senderID !== currentUserID) {
+  //         quill.updateContents(delta);
+  //       }
+  //     };
   
-      socketRef.current.on("document-change", handleDocumentChange);
+  //     socketRef.current.on("document-change", handleDocumentChange);
   
-      return () => {
-        socketRef.current.off("document-change", handleDocumentChange);
-      };
-    }
-  }, [quillRef, currentUserID]);
+  //     return () => {
+  //       socketRef.current.off("document-change", handleDocumentChange);
+  //     };
+  //   }
+  // }, [quillRef, currentUserID]);
 
 
   useEffect(() => {
