@@ -171,6 +171,9 @@ const TextEditor = () => {
   
       const handleDocumentChange = (data) => {
         const { delta, userID: senderID } = data;
+        console.log("Received delta:", delta);
+        console.log("Sender ID:", senderID);
+        console.log("Current user ID:", currentUserID);
         if (senderID !== currentUserID) {
           quill.updateContents(delta);
         }
