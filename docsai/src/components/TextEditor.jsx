@@ -192,7 +192,7 @@ const TextEditor = () => {
       const handleTextChange = (delta, oldContents, source) => {
         if (source === "user" && socketRef.current) {
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit("document-change", { room, delta, userID });
+          socketRef.current.emit("document-change", { room, delta, currentUserID });
         }
       };
   
