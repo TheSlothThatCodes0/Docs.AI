@@ -664,7 +664,7 @@ const TextEditor = () => {
           ).slice(-2)}${("0" + currentDate.getMinutes()).slice(-2)}${(
             "0" + currentDate.getSeconds()
           ).slice(-2)}`;
-          setFileName(formattedDateTime);
+          fileName == "" ? setFileName(formattedDateTime) : null;
 
           const basePath =
             docPath || `users/${user.uid}/documents/${formattedDateTime}`;
