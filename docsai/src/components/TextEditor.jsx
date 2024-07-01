@@ -144,13 +144,15 @@ const TextEditor = () => {
         setIsConnected(true);
       });
 
-      socket.on("document-change", (delta) => {
+      socket.on("document-change", (data) => {
+        const { delta, userID: senderID } = data;
         console.log("Received delta:", delta);
-        if (quillRef.current && !isLocalChange.current) {
-          const quill = quillRef.current.getEditor();
+        console.log("Sender ID:", senderID);
+        console.log("Current user ID:", currentUserID);
+        if (senderID !== currentUserID) {
           quill.updateContents(delta);
         }
-        isLocalChange.current = false;
+
       });
 
       socket.on("disconnect", () => {
