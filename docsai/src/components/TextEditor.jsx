@@ -15,11 +15,11 @@ import ShareAndProfile from "./SaveAndProfile";
 import AutoTitle from "./AutoTitle";
 import ChatWindow from "./ChatWindow";
 import { storage } from "./Firebase";
-import { ref, uploadBytes, getDownloadURL} from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
-import {io} from 'socket.io-client';
+import { io } from "socket.io-client";
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -47,10 +47,12 @@ const TextEditor = () => {
   const [userID, setUserID] = useState("");
   const [fileName, setFileName] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [currentUserID, setCurrentUserID] = useState("");
   const autoSaveIntervalRef = useRef(null);
+  const isLocalChange = useRef(false);
   const editorRef = useRef(null);
   const socketRef = useRef(null);
-  
+
   const modules = {
     toolbar: {
       container: "#toolbar",
@@ -119,13 +121,17 @@ const TextEditor = () => {
     const queryParams = new URLSearchParams(location.search);
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
+    
+    connectToSocket(URL_fileName, URL_userID);
+  }, [location]);
 
-    setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
-
-    if (URL_userID && URL_fileName) {
+  function connectToSocket(URL_fileName, URL_userID) {
+    if (URL_userID != null && URL_fileName != null) {
       setUserID(URL_userID);
       setFileName(URL_fileName);
-      loadFileContent(URL_userID, URL_fileName);
+      URL_userID !== currentUserID ? loadFileContent(URL_userID, URL_fileName) : null;
+      console.log("User ID:", URL_userID, "File name:", URL_fileName);
+      docPath == "" ? setDocPath(`users/${URL_userID}/documents/${URL_fileName}`) : null;
 
       const socket = io("http://localhost:8080");
       socketRef.current = socket;
@@ -133,21 +139,22 @@ const TextEditor = () => {
       const room = `${URL_userID}-${URL_fileName}`;
       socket.emit("join-room", room);
 
-      socket.on('connect', () => {
-        console.log('WebSocket connected');
+      socket.on("connect", () => {
+        console.log("WebSocket connected");
         setIsConnected(true);
       });
 
-      socket.on('document-change', (delta) => {
-        console.log('Received delta:', delta);
-        if (quillRef.current) {
+      socket.on("document-change", (delta) => {
+        console.log("Received delta:", delta);
+        if (quillRef.current && !isLocalChange.current) {
           const quill = quillRef.current.getEditor();
           quill.updateContents(delta);
         }
+        isLocalChange.current = false;
       });
 
-      socket.on('disconnect', () => {
-        console.log('WebSocket disconnected');
+      socket.on("disconnect", () => {
+        console.log("WebSocket disconnected");
         setIsConnected(false);
       });
 
@@ -155,23 +162,26 @@ const TextEditor = () => {
         socket.disconnect();
       };
     }
-  }, [location]);
+  }
+
+
 
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-      
+
       const handleTextChange = (delta, oldContents, source) => {
-        if (source === 'user' && socketRef.current) {
+        if (source === "user" && socketRef.current) {
+          isLocalChange.current = true;
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit('document-change', { room, delta });
+          socketRef.current.emit("document-change", { room, delta });
         }
       };
 
-      quill.on('text-change', handleTextChange);
+      quill.on("text-change", handleTextChange);
 
       return () => {
-        quill.off('text-change', handleTextChange);
+        quill.off("text-change", handleTextChange);
       };
     }
   }, [quillRef, isConnected, userID, fileName]);
@@ -181,10 +191,10 @@ const TextEditor = () => {
       const filePath = `users/${userID}/documents/${fileName}/file_contents.json`;
       const fileRef = ref(storage, filePath);
       const downloadURL = await getDownloadURL(fileRef);
-      
+
       const response = await fetch(downloadURL);
       const contentJson = await response.json();
-      
+
       if (quillRef.current) {
         const quill = quillRef.current.getEditor();
         quill.setContents(contentJson);
@@ -210,8 +220,8 @@ const TextEditor = () => {
     if (isConnected) {
       quill.on("text-change", (delta, oldDelta, source) => {
         if (source === "user") {
-          const message = {room: socketRef.current.room, delta};
-          socketRef.current.emit('document-change', message);
+          const message = { room: socketRef.current.room, delta };
+          socketRef.current.emit("document-change", message);
         }
       });
     }
@@ -219,9 +229,6 @@ const TextEditor = () => {
       quill.off();
     };
   }, []);
-
-
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -512,13 +519,13 @@ const TextEditor = () => {
     const quill = quillRef.current.getEditor();
     quill.focus();
   };
-  
+
   useEffect(() => {
     const editorContainer = editorRef.current;
     if (editorContainer) {
-      editorContainer.addEventListener('click', handleEditorClick);
+      editorContainer.addEventListener("click", handleEditorClick);
       return () => {
-        editorContainer.removeEventListener('click', handleEditorClick);
+        editorContainer.removeEventListener("click", handleEditorClick);
       };
     }
   }, []);
@@ -618,48 +625,65 @@ const TextEditor = () => {
   const handleSave = useCallback(async () => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUserID(user.uid);
+        userID == "" ? setUserID(user.uid) : null;
+        setCurrentUserID(user.uid);
         console.log("User ID:", user.uid);
         const quill = quillRef.current.getEditor();
         const delta = quill.getContents();
-        const contentBlob = new Blob([JSON.stringify(delta)], { type: "application/json" });
+        const contentBlob = new Blob([JSON.stringify(delta)], {
+          type: "application/json",
+        });
         const metadata = { title: title };
         const currentDate = new Date();
-        const editorElement = document.querySelector('.ql-editor');
-  
-        const tempDiv = document.createElement('div');
+        const editorElement = document.querySelector(".ql-editor");
+
+        const tempDiv = document.createElement("div");
         tempDiv.innerHTML = editorElement.innerHTML;
-        tempDiv.style.width = '500px';
-        tempDiv.style.height = '600px';
-        tempDiv.style.overflow = 'hidden';
-  
+        tempDiv.style.width = "500px";
+        tempDiv.style.height = "600px";
+        tempDiv.style.overflow = "hidden";
+
         document.body.appendChild(tempDiv);
-  
+
         try {
           console.log("Creating thumbnail...");
           const thumbnailDataUrl = await toPng(tempDiv, { quality: 0.3 });
           const thumbnailBlob = await (await fetch(thumbnailDataUrl)).blob();
-          const metadataBlob = new Blob([JSON.stringify(metadata)], { type: "application/json" });
-          const formattedDateTime = `${currentDate.getFullYear()}${("0" + (currentDate.getMonth() + 1)).slice(-2)}${("0" + currentDate.getDate()).slice(-2)}_${("0" + currentDate.getHours()).slice(-2)}${("0" + currentDate.getMinutes()).slice(-2)}${("0" + currentDate.getSeconds()).slice(-2)}`;
+          const metadataBlob = new Blob([JSON.stringify(metadata)], {
+            type: "application/json",
+          });
+          const formattedDateTime = `${currentDate.getFullYear()}${(
+            "0" +
+            (currentDate.getMonth() + 1)
+          ).slice(-2)}${("0" + currentDate.getDate()).slice(-2)}_${(
+            "0" + currentDate.getHours()
+          ).slice(-2)}${("0" + currentDate.getMinutes()).slice(-2)}${(
+            "0" + currentDate.getSeconds()
+          ).slice(-2)}`;
           setFileName(formattedDateTime);
-  
-          const basePath = docPath || `users/${user.uid}/documents/${formattedDateTime}`;
+
+          const basePath =
+            docPath || `users/${user.uid}/documents/${formattedDateTime}`;
           const contentRef = ref(storage, `${basePath}/file_contents.json`);
           const thumbnailRef = ref(storage, `${basePath}/file_thumbnail.png`);
           const metadataRef = ref(storage, `${basePath}/metadata.json`);
           document.body.removeChild(tempDiv);
-  
+
           console.log("Uploading content...");
           await uploadBytes(contentRef, contentBlob);
           console.log("Uploading thumbnail...");
           await uploadBytes(thumbnailRef, thumbnailBlob);
           console.log("Uploading metadata...");
           await uploadBytes(metadataRef, metadataBlob);
-  
+
           if (!docPath) {
             setDocPath(basePath);
           }
-  
+
+          if (!isConnected) {
+            connectToSocket(formattedDateTime, user.uid);
+          }
+
           // alert("Document and thumbnail saved successfully!");
           setIsContentChanged(false); // Reset content changed flag after save
         } catch (error) {
@@ -674,7 +698,7 @@ const TextEditor = () => {
       }
     });
   }, [title, docPath]);
-  
+
   useEffect(() => {
     if (autoSaveEnabled) {
       console.log("Auto-save enabled");
@@ -694,25 +718,25 @@ const TextEditor = () => {
         clearInterval(autoSaveIntervalRef.current);
       }
     }
-  
+
     return () => {
       if (autoSaveIntervalRef.current) {
         clearInterval(autoSaveIntervalRef.current);
       }
     };
   }, [autoSaveEnabled, isContentChanged, handleSave]);
-  
+
   useEffect(() => {
     const quill = quillRef.current.getEditor();
     const handleTextChange = () => {
       console.log("Text changed");
       setIsContentChanged(true);
     };
-  
-    quill.on('text-change', handleTextChange);
-  
+
+    quill.on("text-change", handleTextChange);
+
     return () => {
-      quill.off('text-change', handleTextChange);
+      quill.off("text-change", handleTextChange);
     };
   }, []);
 
@@ -724,8 +748,6 @@ const TextEditor = () => {
     };
   }, [handleKeyDown]);
 
-
-
   return (
     <ValueContext.Provider
       value={{
@@ -735,7 +757,6 @@ const TextEditor = () => {
         quillRef,
         userID: userID,
         fileName,
-
       }}
     >
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
@@ -752,7 +773,10 @@ const TextEditor = () => {
         />
         {/* <FilesPage quillRef={quillRef}/> */}
 
-        <div ref={editorRef} className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative">
+        <div
+          ref={editorRef}
+          className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative"
+        >
           <ReactQuill
             ref={quillRef}
             value={value}
