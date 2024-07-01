@@ -21,6 +21,8 @@ const AutoTitle = ({ title, setTitle }) => {
     setIsEditing(false);
   };
 
+  //greenery
+
   async function getAutoTitle(text) {
     try {
       const response = await fetch('http://localhost:5001/api/auto-title', {
