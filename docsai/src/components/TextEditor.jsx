@@ -20,6 +20,7 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
+import Delta from 'quill-delta';
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -90,8 +91,6 @@ const TextEditor = () => {
   const filterContent = useCallback((content) => {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = content;
-
-    // Remove all img tags
     const imgs = tempDiv.getElementsByTagName("img");
     while (imgs.length > 0) {
       imgs[0].parentNode.removeChild(imgs[0]);
@@ -298,20 +297,29 @@ const TextEditor = () => {
             body: JSON.stringify({ prompt }),
           }
         );
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+  
         const data = await response.json();
         console.log("Generated paragraph:", data.paragraph);
         const generatedParagraph = data.paragraph;
-
+  
         const quill = quillRef.current.getEditor();
         quill.deleteText(promptStart, quill.getLength() - promptStart);
         quill.insertText(promptStart, generatedParagraph);
-        quill.setSelection(promptStart + generatedParagraph.length);
 
+        const delta = new Delta()
+          .retain(promptStart)
+          .delete(quill.getLength() - promptStart)
+          .insert(generatedParagraph);
+  
+        if (socketRef.current && isConnected) {
+          const room = `${userID}-${fileName}`;
+          socketRef.current.emit("document-change", { room, delta });
+        }
+  
         exitPromptMode();
       } catch (error) {
         console.error("Error generating paragraph:", error);
@@ -319,7 +327,7 @@ const TextEditor = () => {
         exitPromptMode();
       }
     },
-    [promptStart, exitPromptMode]
+    [promptStart, exitPromptMode, userID, fileName, isConnected]
   );
 
   const generateImage = useCallback(
@@ -353,7 +361,6 @@ const TextEditor = () => {
         const blob = await imageResponse.blob();
         const imageBitmap = await createImageBitmap(blob);
 
-        // Resize the image
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         const maxWidth = 500;
@@ -362,29 +369,29 @@ const TextEditor = () => {
         canvas.height = imageBitmap.height * scale;
 
         context.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
-        const resizedImageDataUrl = canvas.toDataURL("image/jpeg", 0.7); // Adjust the quality here
+        const resizedImageDataUrl = canvas.toDataURL("image/jpeg", 0.7);
 
         const quill = quillRef.current.getEditor();
+      const delta = new Delta()
+        .retain(promptStart)
+        .delete(quill.getLength() - promptStart)
+        .insert({ image: resizedImageDataUrl });
 
-        quill.deleteText(promptStart, quill.getLength() - promptStart);
-        const delta = quill.insertEmbed(
-          promptStart,
-          "image",
-          resizedImageDataUrl
-        );
-
-        quill.setSelection(promptStart + 1);
-
-        exitPromptMode();
-      } catch (error) {
-        console.error("Error generating image:", error);
-        alert("Failed to generate image. Please try again.");
-        exitPromptMode();
+      quill.updateContents(delta);
+      if (socketRef.current && isConnected) {
+        const room = `${userID}-${fileName}`;
+        socketRef.current.emit("document-change", { room, delta });
       }
-    },
-    [promptStart, exitPromptMode]
-  );
 
+      exitPromptMode();
+    } catch (error) {
+      console.error("Error generating image:", error);
+      alert("Failed to generate image. Please try again.");
+      exitPromptMode();
+    }
+  },
+  [promptStart, exitPromptMode, userID, fileName, isConnected]
+);
   const handleKeyDown = useCallback(
     (event) => {
       // console.log("Key pressed:", event.key);
