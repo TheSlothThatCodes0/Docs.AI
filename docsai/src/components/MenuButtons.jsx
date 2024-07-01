@@ -224,6 +224,8 @@ export default function MenuButtons() {
             fileName: fileName,
           }
         );
+
+        navigate(`/collaborate?userID=${userID}&fileName=${fileName}`)
       } catch (error) {
         console.error("Error sending collaboration link:", error);
         alert("Failed to send collaboration link");

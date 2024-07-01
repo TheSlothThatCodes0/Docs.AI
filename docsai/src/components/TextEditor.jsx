@@ -42,7 +42,7 @@ const TextEditor = () => {
   const [filteredContent, setFilteredContent] = useState("");
   const [title, setTitle] = useState("Untitled Document");
   const location = useLocation();
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
   const [isContentChanged, setIsContentChanged] = useState(false);
   const [userID, setUserID] = useState("");
   const [fileName, setFileName] = useState("");
@@ -102,6 +102,17 @@ const TextEditor = () => {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserID(user.uid);
+        console.log("User ID set by setter:", user.uid);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const filtered = filterContent(value);
     setFilteredContent(filtered);
   }, [value, filterContent]);
@@ -121,7 +132,7 @@ const TextEditor = () => {
     const queryParams = new URLSearchParams(location.search);
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
-    
+
     connectToSocket(URL_fileName, URL_userID);
   }, [location]);
 
@@ -129,9 +140,19 @@ const TextEditor = () => {
     if (URL_userID != null && URL_fileName != null) {
       setUserID(URL_userID);
       setFileName(URL_fileName);
-      URL_userID !== currentUserID ? loadFileContent(URL_userID, URL_fileName) : null;
+      loadFileContent(URL_userID, URL_fileName);
       console.log("User ID:", URL_userID, "File name:", URL_fileName);
-      docPath == "" ? setDocPath(`users/${URL_userID}/documents/${URL_fileName}`) : null;
+      docPath == ""
+        ? setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
+        : null;
+
+      let CURRENT_USER_ID = "";
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          console.log("User ID inside socket:", user.uid);
+          CURRENT_USER_ID = user.uid;
+        }
+      });
 
       const socket = io("http://localhost:8080");
       socketRef.current = socket;
@@ -147,12 +168,15 @@ const TextEditor = () => {
       socket.on("document-change", (data) => {
         if (quillRef.current) {
           const quill = quillRef.current.getEditor();
-  
-          const { delta } = data;
+
+          const { delta, currentUserID: senderID } = data;
+          console.log("revieved data", data);
           console.log("Received delta:", delta);
-          if (URL_userID !== currentUserID) {
+          console.log("Sender ID:", senderID);
+          console.log("Current user ID:", CURRENT_USER_ID);
+          if (senderID !== CURRENT_USER_ID) {
             quill.updateContents(delta);
-            }
+          }
         }
       });
 
@@ -167,48 +191,29 @@ const TextEditor = () => {
     }
   }
 
-
-  // useEffect(() => {
-  //   if (quillRef.current && socketRef.current) {
-  //     const quill = quillRef.current.getEditor();
-  
-  //     const handleDocumentChange = (data) => {
-  //       const { delta, userID: senderID } = data;
-  //       console.log("Received delta:", delta);
-  //       console.log("Sender ID:", senderID);
-  //       console.log("Current user ID:", currentUserID);
-  //       if (senderID !== currentUserID) {
-  //         quill.updateContents(delta);
-  //       }
-  //     };
-  
-  //     socketRef.current.on("document-change", handleDocumentChange);
-  
-  //     return () => {
-  //       socketRef.current.off("document-change", handleDocumentChange);
-  //     };
-  //   }
-  // }, [quillRef, currentUserID]);
-
-
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-  
-      const handleTextChange = (delta, oldContents, source) => {
+
+      const handleTextChangeSocket = (delta, oldContents, source) => {
+        console.log("Text changed, source:", source);
         if (source === "user" && socketRef.current) {
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit("document-change", { room, delta, currentUserID });
+          socketRef.current.emit("document-change", {
+            room,
+            delta,
+            currentUserID,
+          });
         }
       };
-  
-      quill.on("text-change", handleTextChange);
-  
+
+      quill.on("text-change", handleTextChangeSocket);
+
       return () => {
-        quill.off("text-change", handleTextChange);
+        quill.off("text-change", handleTextChangeSocket);
       };
     }
-  }, [quillRef, isConnected, userID, fileName]);
+  }, [quillRef, isConnected, userID, fileName, currentUserID]);
 
   const loadFileContent = async (userID, fileName) => {
     try {
@@ -288,6 +293,7 @@ const TextEditor = () => {
     (delta, oldDelta, source) => {
       if (source === "user") {
         const quill = quillRef.current.getEditor();
+        console.log("Text changed, source:", source);
         setValue(quill.root.innerHTML);
         setIsContentChanged(true);
         if (isPromptMode) {
@@ -753,7 +759,7 @@ const TextEditor = () => {
   useEffect(() => {
     const quill = quillRef.current.getEditor();
     const handleTextChange = () => {
-      console.log("Text changed");
+      // console.log("Text changed");
       setIsContentChanged(true);
     };
 
