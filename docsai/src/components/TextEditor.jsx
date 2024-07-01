@@ -49,7 +49,6 @@ const TextEditor = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [currentUserID, setCurrentUserID] = useState("");
   const autoSaveIntervalRef = useRef(null);
-  const isLocalChange = useRef(false);
   const editorRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -133,26 +132,12 @@ const TextEditor = () => {
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
 
-    connectToSocket(URL_fileName, URL_userID);
-  }, [location]);
+    setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
 
-  function connectToSocket(URL_fileName, URL_userID) {
-    if (URL_userID != null && URL_fileName != null) {
+    if (URL_userID && URL_fileName) {
       setUserID(URL_userID);
       setFileName(URL_fileName);
       loadFileContent(URL_userID, URL_fileName);
-      console.log("User ID:", URL_userID, "File name:", URL_fileName);
-      docPath == ""
-        ? setDocPath(`users/${URL_userID}/documents/${URL_fileName}`)
-        : null;
-
-      let CURRENT_USER_ID = "";
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          console.log("User ID inside socket:", user.uid);
-          CURRENT_USER_ID = user.uid;
-        }
-      });
 
       const socket = io("http://localhost:8080");
       socketRef.current = socket;
@@ -160,28 +145,21 @@ const TextEditor = () => {
       const room = `${URL_userID}-${URL_fileName}`;
       socket.emit("join-room", room);
 
-      socket.on("connect", () => {
-        console.log("WebSocket connected");
+      socket.on('connect', () => {
+        console.log('WebSocket connected');
         setIsConnected(true);
       });
 
-      socket.on("document-change", (data) => {
+      socket.on('document-change', (delta) => {
+        console.log('Received delta:', delta);
         if (quillRef.current) {
           const quill = quillRef.current.getEditor();
-
-          const { delta, currentUserID: senderID } = data;
-          console.log("revieved data", data);
-          console.log("Received delta:", delta);
-          console.log("Sender ID:", senderID);
-          console.log("Current user ID:", CURRENT_USER_ID);
-          if (senderID !== CURRENT_USER_ID) {
-            quill.updateContents(delta);
-          }
+          quill.updateContents(delta);
         }
       });
 
-      socket.on("disconnect", () => {
-        console.log("WebSocket disconnected");
+      socket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
         setIsConnected(false);
       });
 
@@ -189,41 +167,36 @@ const TextEditor = () => {
         socket.disconnect();
       };
     }
-  }
+  }, [location]);
 
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-
-      const handleTextChangeSocket = (delta, oldContents, source) => {
-        console.log("Text changed, source:", source);
-        if (source === "user" && socketRef.current) {
+      
+      const handleTextChange = (delta, oldContents, source) => {
+        if (source === 'user' && socketRef.current) {
           const room = `${userID}-${fileName}`;
-          socketRef.current.emit("document-change", {
-            room,
-            delta,
-            currentUserID,
-          });
+          socketRef.current.emit('document-change', { room, delta });
         }
       };
 
-      quill.on("text-change", handleTextChangeSocket);
+      quill.on('text-change', handleTextChange);
 
       return () => {
-        quill.off("text-change", handleTextChangeSocket);
+        quill.off('text-change', handleTextChange);
       };
     }
-  }, [quillRef, isConnected, userID, fileName, currentUserID]);
+  }, [quillRef, isConnected, userID, fileName]);
 
   const loadFileContent = async (userID, fileName) => {
     try {
       const filePath = `users/${userID}/documents/${fileName}/file_contents.json`;
       const fileRef = ref(storage, filePath);
       const downloadURL = await getDownloadURL(fileRef);
-
+      
       const response = await fetch(downloadURL);
       const contentJson = await response.json();
-
+      
       if (quillRef.current) {
         const quill = quillRef.current.getEditor();
         quill.setContents(contentJson);
@@ -246,14 +219,15 @@ const TextEditor = () => {
 
   useEffect(() => {
     const quill = quillRef.current.getEditor();
-    if (isConnected) {
-      quill.on("text-change", (delta, oldDelta, source) => {
-        if (source === "user") {
-          const message = { room: socketRef.current.room, delta };
-          socketRef.current.emit("document-change", message);
-        }
-      });
-    }
+
+    quill.on("text-change", (delta, oldDelta, source) => {
+      console.log("Text changed, source:", source);
+      if (source === "user") {
+        const message = {room: socketRef.current.room, delta};
+        socketRef.current.emit('document-change', message);
+      }
+    });
+
     return () => {
       quill.off();
     };
@@ -709,11 +683,7 @@ const TextEditor = () => {
           if (!docPath) {
             setDocPath(basePath);
           }
-
-          if (!isConnected) {
-            connectToSocket(formattedDateTime, user.uid);
-          }
-
+          
           // alert("Document and thumbnail saved successfully!");
           setIsContentChanged(false); // Reset content changed flag after save
         } catch (error) {
