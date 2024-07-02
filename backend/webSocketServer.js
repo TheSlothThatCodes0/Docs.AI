@@ -40,8 +40,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on("cursor-position", (data) => {
-    const { room, userId, position } = data;
-    socket.to(room).emit("cursor-position", { userId, position });
+    const { room, userId, position, userName } = data;
+    socket.to(room).emit("cursor-position", { userId, position, userName });
   });
 });
 

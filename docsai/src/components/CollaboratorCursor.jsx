@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const CollaboratorCursor = ({ userId, position, quillRef, color }) => {
+const CollaboratorCursor = ({ userId, position, quillRef, color, userName }) => {
   const cursorRef = useRef(null);
 
   useEffect(() => {
@@ -40,10 +40,10 @@ const CollaboratorCursor = ({ userId, position, quillRef, color }) => {
         style={{ backgroundColor: color }}
       />
       <div
-        className="ml-1 px-1 py-0.5 text-xs text-white rounded"
+        className="ml-1 mb-8 px-1 py-0.5 text-xs text-white rounded"
         style={{ backgroundColor: color }}
       >
-        {userId}
+        {userName}
       </div>
     </div>
   );

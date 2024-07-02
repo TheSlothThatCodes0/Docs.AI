@@ -20,20 +20,16 @@ import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
-import Delta from 'quill-delta';
+import Delta from "quill-delta";
 import CollaboratorCursor from "./CollaboratorCursor";
 
 const auth = getAuth();
 const ValueContext = createContext();
 
-const getRandomColor = () => {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
+const COLORS = [
+  "#FF6B6B", "#4ECDC4", "#45B7D1", "#F7DC6F", "#B39DDB",
+  "#4DB6AC", "#FF8A65", "#BA68C8", "#FFD54F", "#81C784"
+];
 
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -59,17 +55,27 @@ const TextEditor = () => {
   const [fileName, setFileName] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [currentUserID, setCurrentUserID] = useState("");
+  const [currentUsername, setCurrentUsername] = useState("");
   const [collaboratorCursors, setCollaboratorCursors] = useState({});
+  const [userNames, setUserNames] = useState({});
   const [userColors, setUserColors] = useState({});
   const autoSaveIntervalRef = useRef(null);
   const editorRef = useRef(null);
   const socketRef = useRef(null);
-
+  const colorIndexRef = useRef(0);
+  
   const modules = {
     toolbar: {
       container: "#toolbar",
     },
   };
+
+
+  const getNextColor = useCallback(() => {
+    const color = COLORS[colorIndexRef.current];
+    colorIndexRef.current = (colorIndexRef.current + 1) % COLORS.length;
+    return color;
+  }, []);
 
   const fetchSuggestions = async (text) => {
     try {
@@ -115,7 +121,11 @@ const TextEditor = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUserID(user.uid);
-        console.log("User ID set by setter:", user.uid);
+        user.displayName !== null
+          ? setCurrentUsername(user.displayName)
+          : setCurrentUsername("Anonymous");
+        console.log("User ID set by setter:", currentUserID);
+        console.log("User name set by setter:", currentUsername);
       }
     });
 
@@ -174,39 +184,62 @@ const TextEditor = () => {
       });
 
       socketRef.current.on("cursor-position", (data) => {
-        const { userId, position } = data;
+        const { userId, position, userName } = data;
         setCollaboratorCursors((prevCursors) => ({
           ...prevCursors,
           [userId]: position,
         }));
-      
-        if (!userColors[userId]) {
-          setUserColors((prevColors) => ({
-            ...prevColors,
-            [userId]: getRandomColor(),
+
+        if (!userNames[userId]) {
+          setUserNames((prevNames) => ({
+            ...prevNames,
+            [userId]: userName,
           }));
         }
+
+        setUserColors((prevColors) => {
+          if (!prevColors[userId]) {
+            return {
+              ...prevColors,
+              [userId]: getNextColor(),
+            };
+          }
+          return prevColors;
+        });
+
       });
 
       return () => {
         socket.disconnect();
       };
     }
-  }, []);
+  }, [getNextColor]);
 
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-  
+
       const handleTextChange = (delta, oldContents, source) => {
         if (source === "user" && socketRef.current) {
           const room = `${userID}-${fileName}`;
           socketRef.current.emit("document-change", { room, delta });
         }
+        
+        // Update cursor position after text change
+        const range = quill.getSelection();
+        if (range) {
+          const room = `${userID}-${fileName}`;
+          socketRef.current.emit("cursor-position", {
+            room,
+            userId: currentUserID,
+            userName: currentUsername,
+            position: range,
+          });
+        }
       };
-  
+
       quill.on("text-change", handleTextChange);
-  
+
       const throttle = (func, delay) => {
         let timeoutId = null;
         return (...args) => {
@@ -218,18 +251,19 @@ const TextEditor = () => {
           }
         };
       };
-  
+
       const handleCursorChange = throttle((range, oldRange, source) => {
         if (range && socketRef.current && isConnected) {
           const room = `${userID}-${fileName}`;
           socketRef.current.emit("cursor-position", {
             room,
             userId: currentUserID,
+            userName: currentUsername,
             position: range,
           });
         }
       }, 100);
-  
+
       quill.on("selection-change", handleCursorChange);
 
       return () => {
@@ -237,7 +271,6 @@ const TextEditor = () => {
         quill.off("selection-change", handleCursorChange);
       };
     }
-
   }, [currentUserID, userID, fileName, isConnected, quillRef, socketRef]);
 
   const loadFileContent = async (userID, fileName) => {
@@ -351,15 +384,15 @@ const TextEditor = () => {
             body: JSON.stringify({ prompt }),
           }
         );
-  
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
+
         const data = await response.json();
         console.log("Generated paragraph:", data.paragraph);
         const generatedParagraph = data.paragraph;
-  
+
         const quill = quillRef.current.getEditor();
         quill.deleteText(promptStart, quill.getLength() - promptStart);
         quill.insertText(promptStart, generatedParagraph);
@@ -368,12 +401,12 @@ const TextEditor = () => {
           .retain(promptStart)
           .delete(quill.getLength() - promptStart)
           .insert(generatedParagraph);
-  
+
         if (socketRef.current && isConnected) {
           const room = `${userID}-${fileName}`;
           socketRef.current.emit("document-change", { room, delta });
         }
-  
+
         exitPromptMode();
       } catch (error) {
         console.error("Error generating paragraph:", error);
@@ -426,26 +459,26 @@ const TextEditor = () => {
         const resizedImageDataUrl = canvas.toDataURL("image/jpeg", 0.7);
 
         const quill = quillRef.current.getEditor();
-      const delta = new Delta()
-        .retain(promptStart)
-        .delete(quill.getLength() - promptStart)
-        .insert({ image: resizedImageDataUrl });
+        const delta = new Delta()
+          .retain(promptStart)
+          .delete(quill.getLength() - promptStart)
+          .insert({ image: resizedImageDataUrl });
 
-      quill.updateContents(delta);
-      if (socketRef.current && isConnected) {
-        const room = `${userID}-${fileName}`;
-        socketRef.current.emit("document-change", { room, delta });
+        quill.updateContents(delta);
+        if (socketRef.current && isConnected) {
+          const room = `${userID}-${fileName}`;
+          socketRef.current.emit("document-change", { room, delta });
+        }
+
+        exitPromptMode();
+      } catch (error) {
+        console.error("Error generating image:", error);
+        alert("Failed to generate image. Please try again.");
+        exitPromptMode();
       }
-
-      exitPromptMode();
-    } catch (error) {
-      console.error("Error generating image:", error);
-      alert("Failed to generate image. Please try again.");
-      exitPromptMode();
-    }
-  },
-  [promptStart, exitPromptMode, userID, fileName, isConnected]
-);
+    },
+    [promptStart, exitPromptMode, userID, fileName, isConnected]
+  );
   const handleKeyDown = useCallback(
     (event) => {
       // console.log("Key pressed:", event.key);
@@ -809,8 +842,6 @@ const TextEditor = () => {
     };
   }, [handleKeyDown]);
 
-
-
   return (
     <ValueContext.Provider
       value={{
@@ -829,7 +860,6 @@ const TextEditor = () => {
 
        </div>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
-     
         <AutoTitle
           content={filteredContent}
           title={title}
@@ -843,22 +873,10 @@ const TextEditor = () => {
         />
         {/* <FilesPage quillRef={quillRef}/> */}
 
-        
-
         <div
           ref={editorRef}
           className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative"
         >
-
-{Object.entries(collaboratorCursors).map(([userId, position]) => (
-        <CollaboratorCursor
-          key={userId}
-          userId={userId}
-          position={position}
-          quillRef={quillRef}
-          color={userColors[userId]}
-        />
-      ))}
           <ReactQuill
             ref={quillRef}
             value={value}
@@ -866,6 +884,17 @@ const TextEditor = () => {
             modules={modules}
             onChangeSelection={handleTextSelect}
           />
+
+          {Object.entries(collaboratorCursors).map(([userId, position]) => (
+            <CollaboratorCursor
+              key={userId}
+              userId={userId}
+              position={position}
+              quillRef={quillRef}
+              color={userColors[userId]}
+              userName={userNames[userId]}
+            />
+          ))}
 
           {currentSuggestion && (
             <span className="text-gray-400 mt-2">{currentSuggestion}</span>
