@@ -102,15 +102,15 @@ const FilesPage = () => {
     
     <div className="bg-gray-200 min-h-screen">
       <div className="bg-gray-200 flex ">
-       <img src={require('../assets/logo7.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
+       <img src={require('../assets/logo7.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 absolute" />
 
        </div>
-      <div className="max-w-[90%] mx-auto py-6 top-10 sm:px-6 lg:px-8 relative">
+      <div className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8 relative">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">My Documents</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6 relative top-10">My Documents</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-500 transition-colors duration-200 aspect-[3/4]"
+              className="top-10 relative border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-500 transition-colors duration-200 aspect-[3/4]"
               onClick={() => navigate('/editor')}
             >
               <FontAwesomeIcon icon={faPlus} className="text-4xl mb-2" />
@@ -119,7 +119,7 @@ const FilesPage = () => {
             {files.map((file) => (
               <div
                 key={file.fileName}
-                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group relative aspect-[3/4] flex flex-col"
+                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer group relative aspect-[3/4] flex flex-col top-10"
                 onClick={() => handleFileClick(file)}
               >
                 <div className="flex-grow flex flex-col p-2">
