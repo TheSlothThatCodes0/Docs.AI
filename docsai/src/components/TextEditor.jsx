@@ -755,6 +755,8 @@ const TextEditor = () => {
     };
   }, [handleKeyDown]);
 
+
+
   return (
     <ValueContext.Provider
       value={{
@@ -766,7 +768,12 @@ const TextEditor = () => {
         fileName,
       }}
     >
+       <div className="bg-gray-200 flex ">
+       <img src={require('../assets/logo3.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
+
+       </div>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
+     
         <AutoTitle
           content={filteredContent}
           title={title}

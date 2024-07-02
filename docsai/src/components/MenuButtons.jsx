@@ -234,7 +234,7 @@ export default function MenuButtons() {
   };
 
   return (
-    <div className="fixed left-6 top-40 bg-white rounded-3xl shadow-lg p-4">
+    <div className="fixed left-6 top-52 bg-white rounded-3xl shadow-lg p-4">
       <ul className="flex flex-col items-center space-y-6">
         {menuItems.map((item) => (
           <li key={item.id} className="relative">

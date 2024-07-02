@@ -38,7 +38,7 @@ export default function ShareAndProfile({ handleSave, onAutoSaveChange }) {
         <AutoSave onAutoSaveChange={onAutoSaveChange} />
         <button
           type="button"
-          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center ml-4 mr-4"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-1 px-2 border border-gray-400 rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center ml-4 mr-10"
           onClick={handleSaveWithAuth}
         >
           <FontAwesomeIcon icon={faFloppyDisk} className="h-4 w-4 mr-2" />
@@ -47,7 +47,7 @@ export default function ShareAndProfile({ handleSave, onAutoSaveChange }) {
         <div className="relative">
           <button
             type="button"
-            className="p-0 rounded-full h-12 w-12 flex items-center justify-center overflow-hidden shadow-md"
+            className="p-0 rounded-full h-10 w-10 flex items-center justify-center overflow-hidden shadow-md"
             onClick={() => setShowLogout(!showLogout)}
           >
             {profilePicUrl ? (

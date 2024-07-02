@@ -38,6 +38,11 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
+
+  socket.on("cursor-position", (data) => {
+    const { room, userId, position } = data;
+    socket.to(room).emit("cursor-position", { userId, position });
+  });
 });
 
 const PORT = process.env.PORT || 8080;

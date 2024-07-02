@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const AutoSave = ({ onAutoSaveChange, initialState = false }) => {
+const AutoSave = ({ onAutoSaveChange, initialState = true }) => {
   const [enabled, setEnabled] = useState(initialState);
 
   useEffect(() => {
