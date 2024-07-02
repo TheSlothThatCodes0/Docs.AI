@@ -99,8 +99,13 @@ const FilesPage = () => {
   }, [auth, storage]);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="max-w-[90%] mx-auto py-6 sm:px-6 lg:px-8">
+    
+    <div className="bg-gray-200 min-h-screen">
+      <div className="bg-gray-200 flex ">
+       <img src={require('../assets/logo3.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
+
+       </div>
+      <div className="max-w-[90%] mx-auto py-6 top-10 sm:px-6 lg:px-8 relative">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">My Documents</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
