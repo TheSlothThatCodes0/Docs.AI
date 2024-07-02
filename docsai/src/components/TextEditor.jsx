@@ -637,10 +637,21 @@ const TextEditor = () => {
     console.log("Modified text:", modifiedText);
 
     if (currentSelection && modifiedText) {
-      quill.deleteText(currentSelection.index, currentSelection.length);
-      quill.insertText(currentSelection.index, modifiedText);
+      const delta = new Delta()
+        .retain(currentSelection.index)
+        .delete(currentSelection.length)
+        .insert(modifiedText);
+
+      quill.updateContents(delta);
       quill.setSelection(currentSelection.index + modifiedText.length);
       setValue(quill.root.innerHTML);
+
+      // Emit the change to other collaborators
+      if (socketRef.current && isConnected) {
+        const room = `${userID}-${fileName}`;
+        socketRef.current.emit("document-change", { room, delta });
+      }
+
       setShowPrompt(false);
       setPromptInput("");
       setModifiedText("");
@@ -652,21 +663,7 @@ const TextEditor = () => {
         { currentSelection, modifiedText }
       );
     }
-  }, [selectionRange, modifiedText, setValue]);
-
-  useEffect(() => {
-    // console.log("Quill content updated:", value);
-  }, [value]);
-
-  useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      quill.on("selection-change", handleTextSelect);
-      return () => {
-        quill.off("selection-change", handleTextSelect);
-      };
-    }
-  }, [handleTextSelect]);
+  }, [selectionRange, modifiedText, setValue, userID, fileName, isConnected]);
 
   //-----------------------------DO NOT CHANGE ANYTHING BELOW THIS----------------------------------------------------------------
 
@@ -805,7 +802,7 @@ const TextEditor = () => {
           handleSave();
           setIsContentChanged(false); // Reset the content changed flag after saving
         }
-      }, 30000); // 2 minutes
+      }, 5000); // 2 minutes
     } else {
       console.log("Auto-save disabled");
       if (autoSaveIntervalRef.current) {

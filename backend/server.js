@@ -7,10 +7,11 @@ const nodemailer = require("nodemailer");
 const app = express();
 const PORT = process.env.PORT || 5001;
 const openai = new OpenAI({
-  apiKey: "sk-proj-byNj6VE2A1uHi0MOD1ZTT3BlbkFJU2r3EXhIpPBVmmcKNcDm",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 app.use(bodyParser.json());
 app.use(cors());
+require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.zoho.com',
@@ -18,7 +19,7 @@ const transporter = nodemailer.createTransport({
   secure: false, 
   auth: {
     user: 'docsaicolab@zohomail.com',
-    pass: 'Adies2004!!',
+    pass: process.env.EMAIL_PASS,
   },
   tls: {
     rejectUnauthorized: false
