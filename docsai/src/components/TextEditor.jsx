@@ -21,9 +21,19 @@ import { toPng } from "html-to-image";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import Delta from 'quill-delta';
+import CollaboratorCursor from "./CollaboratorCursor";
 
 const auth = getAuth();
 const ValueContext = createContext();
+
+const getRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};
 
 const TextEditor = () => {
   const [value, setValue] = useState("");
@@ -49,6 +59,8 @@ const TextEditor = () => {
   const [fileName, setFileName] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [currentUserID, setCurrentUserID] = useState("");
+  const [collaboratorCursors, setCollaboratorCursors] = useState({});
+  const [userColors, setUserColors] = useState({});
   const autoSaveIntervalRef = useRef(null);
   const editorRef = useRef(null);
   const socketRef = useRef(null);
@@ -161,30 +173,72 @@ const TextEditor = () => {
         setIsConnected(false);
       });
 
+      socketRef.current.on("cursor-position", (data) => {
+        const { userId, position } = data;
+        setCollaboratorCursors((prevCursors) => ({
+          ...prevCursors,
+          [userId]: position,
+        }));
+      
+        if (!userColors[userId]) {
+          setUserColors((prevColors) => ({
+            ...prevColors,
+            [userId]: getRandomColor(),
+          }));
+        }
+      });
+
       return () => {
         socket.disconnect();
       };
     }
-  }, [location]);
+  }, []);
 
   useEffect(() => {
     if (quillRef.current && isConnected) {
       const quill = quillRef.current.getEditor();
-
+  
       const handleTextChange = (delta, oldContents, source) => {
         if (source === "user" && socketRef.current) {
           const room = `${userID}-${fileName}`;
           socketRef.current.emit("document-change", { room, delta });
         }
       };
-
+  
       quill.on("text-change", handleTextChange);
+  
+      const throttle = (func, delay) => {
+        let timeoutId = null;
+        return (...args) => {
+          if (!timeoutId) {
+            func(...args);
+            timeoutId = setTimeout(() => {
+              timeoutId = null;
+            }, delay);
+          }
+        };
+      };
+  
+      const handleCursorChange = throttle((range, oldRange, source) => {
+        if (range && socketRef.current && isConnected) {
+          const room = `${userID}-${fileName}`;
+          socketRef.current.emit("cursor-position", {
+            room,
+            userId: currentUserID,
+            position: range,
+          });
+        }
+      }, 100);
+  
+      quill.on("selection-change", handleCursorChange);
 
       return () => {
         quill.off("text-change", handleTextChange);
+        quill.off("selection-change", handleCursorChange);
       };
     }
-  }, [quillRef, isConnected, userID, fileName]);
+
+  }, [currentUserID, userID, fileName, isConnected, quillRef, socketRef]);
 
   const loadFileContent = async (userID, fileName) => {
     try {
@@ -768,6 +822,8 @@ const TextEditor = () => {
         fileName,
       }}
     >
+      
+      
        <div className="bg-gray-200 flex ">
        <img src={require('../assets/logo3.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
 
@@ -787,10 +843,22 @@ const TextEditor = () => {
         />
         {/* <FilesPage quillRef={quillRef}/> */}
 
+        
+
         <div
           ref={editorRef}
           className="w-[8.5in] min-h-[11in] p-10 bg-white shadow-md border border-gray-200 overflow-hidden mt-10 z-10 mb-5 rounded relative"
         >
+
+{Object.entries(collaboratorCursors).map(([userId, position]) => (
+        <CollaboratorCursor
+          key={userId}
+          userId={userId}
+          position={position}
+          quillRef={quillRef}
+          color={userColors[userId]}
+        />
+      ))}
           <ReactQuill
             ref={quillRef}
             value={value}
