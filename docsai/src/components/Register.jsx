@@ -39,7 +39,7 @@ function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gray-200 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-gray-50 p-8 rounded-xl shadow-lg">
         <div>
-          <img className="mx-auto h-1/4 w-auto" src={require('../assets/logo2.png')} alt="Docs.AI Logo" />
+          <img className="mx-auto h-1/4 w-auto" src={require('../assets/logo6.png')} alt="Docs.AI Logo" />
           <h2 className="mt-10 text-center text-3xl font-extrabold text-gray-900">
            Create a new account
           </h2>

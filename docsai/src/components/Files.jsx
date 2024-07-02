@@ -102,7 +102,7 @@ const FilesPage = () => {
     
     <div className="bg-gray-200 min-h-screen">
       <div className="bg-gray-200 flex ">
-       <img src={require('../assets/logo3.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
+       <img src={require('../assets/logo7.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
 
        </div>
       <div className="max-w-[90%] mx-auto py-6 top-10 sm:px-6 lg:px-8 relative">
