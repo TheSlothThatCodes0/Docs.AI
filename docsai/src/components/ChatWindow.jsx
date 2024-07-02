@@ -50,26 +50,26 @@ const ChatWindow = () => {
     <>
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className="fixed right-6 bottom-6 z-50 bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 border border-gray-200"
+        className="fixed right-6 bottom-6 z-50 bg-white text-gray-800 pt-2.5 pb-2 pr-3 pl-3 rounded-full shadow-md hover:bg-gray-100 transition-colors duration-300 border border-gray-200"
         aria-label="Toggle chat"
       >
         <FontAwesomeIcon icon={isVisible ? faTimes : faCommentDots} className="w-6 h-6" />
       </button>
       {isVisible && (
-        <div className="fixed right-6 top-32 bottom-20 w-96 bg-white shadow-lg flex flex-col rounded-lg overflow-hidden z-40 border border-gray-200">
-          <div className="bg-white text-gray-800 p-4 font-bold text-lg flex justify-between items-center border-b border-gray-200">
+        <div className="fixed right-6 top-32 bottom-20 bg-opacity-20 backdrop-blur-sm w-96 bg-gray-400 shadow-lg flex flex-col rounded-lg overflow-hidden z-40 border border-gray-200">
+          <div className=" bg-opacity-40  text-gray-800 p-4 font-bold text-lg flex justify-between items-center border-b border-gray-200">
             <span>Chat Window</span>
             <button onClick={() => setIsVisible(false)} className="text-gray-600 hover:text-gray-800">
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-200 bg-opacity-20 backdrop-blur-sm">
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <span className={`inline-block p-3 rounded-lg ${
                   message.role === 'user' 
                     ? 'bg-gray-200 text-gray-800' 
-                    : 'bg-white text-gray-800 border border-gray-300'
+                    : 'bg-gray-100 text-gray-800 border border-gray-300'
                 }`}>
                   {message.content}
                 </span>
@@ -77,19 +77,19 @@ const ChatWindow = () => {
             ))}
             <div ref={messagesEndRef} />
           </div>
-          <form onSubmit={handleSubmit} className="p-4 bg-white border-t border-gray-200">
+          <form onSubmit={handleSubmit} className="p-4 bg-grey-400 border-t border-gray-200">
             <div className="flex items-center">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-l-lg p-2 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                className="flex-1 bg-gray-400 bg-opacity-30 border border-gray-300 rounded-l-lg p-2 focus:outline-none  "
                 placeholder="Type a message..."
                 disabled={isLoading}
               />
               <button
                 type="submit"
-                className="bg-white text-gray-600 p-2 rounded-r-lg hover:bg-gray-100 transition-colors duration-300 border border-gray-300 border-l-0"
+                className="bg-gray-400 bg-opacity-30 text-gray-600 p-2 rounded-r-lg hover:bg-gray-100 transition-colors duration-300 border border-gray-300 border-l-0"
                 disabled={isLoading}
               >
                 <FontAwesomeIcon icon={faPaperPlane} className="w-5 h-5" />

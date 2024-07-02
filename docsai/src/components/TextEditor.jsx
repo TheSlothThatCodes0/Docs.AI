@@ -853,7 +853,7 @@ const TextEditor = () => {
       
       
        <div className="bg-gray-200 flex ">
-       <img src={require('../assets/logo7.png')} alt = 'logo' className = " h-14 w-auto top-5 left-5 fixed" />
+       <img src={require('../assets/logo_home.png')} alt = 'logo' className = " h-12 w-auto top-5 left-5 fixed" />
 
        </div>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
@@ -900,7 +900,7 @@ const TextEditor = () => {
           {showPrompt && (
             <div
               // className="prompt-modal"
-              className="bg-gray-400 bg-opacity-20 backdrop-blur-md p-2 shadow z-10 rounded-2xl"
+              className="bg-gray-400 bg-opacity-30 backdrop-blur-lg p-2 shadow-lg z-10 rounded-2xl"
               style={{
                 position: "absolute",
                 top: `${promptPosition.top + 35}px`,
@@ -921,7 +921,7 @@ const TextEditor = () => {
                 <button
                   type="submit"
                   // className="prompt-submit"
-                  className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500"
+                  className="bg-gray-400 bg-opacity-20 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-600"
                   onClick={() => console.log("Submit button clicked")}
                 >
                   {isLoading ? "Loading..." : "Submit"}
@@ -929,7 +929,7 @@ const TextEditor = () => {
                 <button
                   type="button"
                   // className="prompt-cancel"
-                  className="bg-red-700 bg-opacity-10 p-1.5 rounded-2xl ml-2 text-md text-red-500"
+                  className="bg-red-700 bg-opacity-40 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-red-300"
                   onClick={handleDiscard}
                 >
                   Cancel
@@ -948,13 +948,13 @@ const TextEditor = () => {
                       console.log("Current modified text:", modifiedText);
                       handleReplace();
                     }}
-                    className="bg-gray-500 bg-opacity-10 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-500"
+                    className="bg-gray-400 bg-opacity-20 backdrop-blur-sm p-1.5 rounded-2xl ml-2 text-md text-gray-600"
                   >
                     Replace
                   </button>
                   <button
                     onClick={handleDiscard}
-                    className="bg-red-700 bg-opacity-10 p-1.5 rounded-2xl ml-2 text-md text-red-500"
+                    className="bg-red-700 bg-opacity-40 p-1.5 rounded-2xl ml-2 text-md text-red-300"
                   >
                     Discard
                   </button>

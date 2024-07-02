@@ -33,12 +33,12 @@ export default function ShareAndProfile({ handleSave, onAutoSaveChange }) {
   };
 
   return (
-    <div className="fixed top-4 right-7">
+    <div className="fixed top-4 right-3">
       <div className="flex flex-row items-center">
         <AutoSave onAutoSaveChange={onAutoSaveChange} />
         <button
           type="button"
-          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-1 px-2 border border-gray-400 rounded-lg shadow-sm transition duration-150 ease-in-out flex items-center justify-center ml-4 mr-10"
+          className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-1 px-2 border border-gray-300 rounded-lg shadow-md transition duration-150 ease-in-out flex items-center justify-center ml-4 mr-5"
           onClick={handleSaveWithAuth}
         >
           <FontAwesomeIcon icon={faFloppyDisk} className="h-4 w-4 mr-2" />

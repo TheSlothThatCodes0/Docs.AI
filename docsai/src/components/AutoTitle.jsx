@@ -102,7 +102,7 @@ const AutoTitle = ({ title, setTitle }) => {
   return (
     <div 
       ref={containerRef}
-      className="fixed top-24 left-3 p-4 flex items-center title-container"
+      className="fixed top-6 left-16 p-1 flex items-center title-container"
       onBlur={handleContainerBlur}
       tabIndex="-1" 
     >
