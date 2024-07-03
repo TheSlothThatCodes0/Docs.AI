@@ -22,6 +22,7 @@ import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import Delta from "quill-delta";
 import CollaboratorCursor from "./CollaboratorCursor";
+import { useNavigate } from "react-router-dom";
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -63,6 +64,7 @@ const TextEditor = () => {
   const editorRef = useRef(null);
   const socketRef = useRef(null);
   const colorIndexRef = useRef(0);
+  const navigate = useNavigate();
   
   const modules = {
     toolbar: {
@@ -852,9 +854,10 @@ const TextEditor = () => {
     >
       
       
-       <div className="bg-gray-200 flex ">
+       <div className="bg-gray-200 flex " onClick={() => navigate('/files')} >
+        
        <img src={require('../assets/logo_home.png')} alt = 'logo' className = " h-12 w-auto top-5 left-5 fixed" />
-
+       
        </div>
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
         <AutoTitle

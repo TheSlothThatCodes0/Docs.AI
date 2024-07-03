@@ -4,11 +4,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { auth } from "./Firebase";
 import { toast } from "react-toastify";
 import SignInwithGoogle from "./SignInWithGoogle";
+import { useLocation } from "react-router-dom"; 
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
