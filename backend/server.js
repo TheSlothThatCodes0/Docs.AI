@@ -203,7 +203,7 @@ app.post("/api/image", async (req, res) => {
 app.post("/api/send-colaboration-link", (req, res) => {
   const { email, userID, fileName } = req.body;
   console.log("Received email:", email);
-  const colaborationLink = `http://34.16.205.25:3000/collaborate?userID=${userID}&fileName=${fileName}`;
+  const colaborationLink = `http://34.16.205.25/collaborate?userID=${userID}&fileName=${fileName}`;
   const mailOptions = {
     from: "docsaicolab@zohomail.com",
     to: email,

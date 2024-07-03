@@ -411,29 +411,41 @@ const TextEditor = () => {
             body: JSON.stringify({ prompt }),
           }
         );
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+  
         const data = await response.json();
         console.log("Generated paragraph:", data.paragraph);
         const generatedParagraph = data.paragraph;
-
+  
         const quill = quillRef.current.getEditor();
-        quill.deleteText(promptStart, "Processing...".length);
-        quill.insertText(promptStart, generatedParagraph);
-
+        
+        // Delete the prompt text
+        quill.deleteText(promptStart, quill.getLength() - promptStart);
+        
+        // Insert the generated paragraph with normal formatting
+        quill.insertText(promptStart, generatedParagraph, {
+          color: 'black',
+          bold: false,
+          italic: false
+        });
+  
         const delta = new Delta()
           .retain(promptStart)
-          .delete("Processing...".length)
-          .insert(generatedParagraph);
-
+          .delete(quill.getLength() - promptStart)
+          .insert(generatedParagraph, {
+            color: 'black',
+            bold: false,
+            italic: false
+          });
+  
         if (socketRef.current && isConnected) {
           const room = `${userID}-${fileName}`;
           socketRef.current.emit("document-change", { room, delta });
         }
-
+  
         exitPromptMode();
       } catch (error) {
         console.error("Error generating paragraph:", error);
@@ -525,8 +537,8 @@ const TextEditor = () => {
           console.log(`'/${event.key}' detected, entering prompt mode`);
           setIsPromptMode(true);
           setPromptStart(position - 1);
-          quill.formatText(position - 1, 2, { color: "#775599", bold: true, italic: true});
-          console.log("Prompt mode activated, start position:", position - 1);
+          quill.formatText(position - 1, 2, { color: "#775599", bold: true, italic: true });
+          quill.formatText(position + 1, quill.getLength() - position - 1, { color: "black", bold: false, italic: false });
         }
       } else if (event.key === "Enter" && isPromptMode) {
         console.log("Enter pressed in prompt mode");
@@ -769,7 +781,7 @@ const TextEditor = () => {
         const contentBlob = new Blob([JSON.stringify(delta)], {
           type: "application/json",
         });
-        const metadata = { title: title };
+        const metadata = { title: title, userID: user.uid, fileName: fileName, docPath: docPath};
         const currentDate = new Date();
         const editorElement = document.querySelector(".ql-editor");
 
