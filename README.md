@@ -1,6 +1,6 @@
-# Docs.AI
+![image](https://github.com/TheSlothThatCodes0/Docs.AI/assets/109855930/fd149a5a-b1fb-46ce-8620-e05ab80d7f61)
 
-Experience a new era of document creation with Docs.AI. Designed to enhance productivity and creativity, our web-based editor combines the sleek, modern aesthetics of a contemporary user interface with powerful, cutting-edge features.
+
 
 ## Key Features
 
@@ -25,6 +25,9 @@ Transform the way you create, collaborate, and communicate with Docs.AI. Whether
 - Firebase (for authentication and database)
 - Google OAuth (for google login)
 - Google Cloud Platform (for webserver hosting)
+
+![flowchart](https://github.com/TheSlothThatCodes0/Docs.AI/assets/109855930/f2dc4089-5826-4267-bed5-6f82c0236f08)
+
 
 ## Want to use it for yourself?
 
