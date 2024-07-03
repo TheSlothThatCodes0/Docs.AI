@@ -59,7 +59,7 @@ const AutoTitle = ({ title, setTitle }) => {
 
   async function getAutoTitle(text) {
     try {
-      const response = await fetch('http://localhost:5001/api/auto-title', {
+      const response = await fetch('http://34.16.205.25:5001/api/auto-title', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -217,7 +217,7 @@ export default function MenuButtons() {
     if (email) {
       try {
         const response = await axios.post(
-          "http://localhost:5001/api/send-colaboration-link",
+          "http://34.16.205.25:5001/api/send-colaboration-link",
           {
             email: email,
             userID: userID,

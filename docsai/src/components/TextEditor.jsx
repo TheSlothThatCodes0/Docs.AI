@@ -79,7 +79,7 @@ const TextEditor = () => {
 
   const fetchSuggestions = async (text) => {
     try {
-      const response = await fetch("http://localhost:5001/api/suggestions", {
+      const response = await fetch("http://34.16.205.25:5001/api/suggestions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +159,7 @@ const TextEditor = () => {
       setFileName(URL_fileName);
       loadFileContent(URL_userID, URL_fileName);
 
-      const socket = io("http://localhost:8080");
+      const socket = io("http://34.16.205.25:8080");
       socketRef.current = socket;
 
       const room = `${URL_userID}-${URL_fileName}`;
@@ -375,7 +375,7 @@ const TextEditor = () => {
       try {
         console.log("Generating paragraph with prompt:", prompt);
         const response = await fetch(
-          "http://localhost:5001/api/generate-paragraph",
+          "http://34.16.205.25:5001/api/generate-paragraph",
           {
             method: "POST",
             headers: {
@@ -421,7 +421,7 @@ const TextEditor = () => {
     async (prompt) => {
       try {
         console.log("Generating image with prompt:", prompt);
-        const response = await fetch("http://localhost:5001/api/image", {
+        const response = await fetch("http://34.16.205.25:5001/api/image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -436,7 +436,7 @@ const TextEditor = () => {
         const data = await response.json();
         const generatedImage = data.image;
 
-        const proxyUrl = `http://localhost:5002/proxy?url=${encodeURIComponent(
+        const proxyUrl = `http://34.16.205.25:5002/proxy?url=${encodeURIComponent(
           generatedImage
         )}`;
 
@@ -592,7 +592,7 @@ const TextEditor = () => {
         console.warn("No text selected or highlighted. Using empty string.");
       }
 
-      const response = await fetch("http://localhost:5001/api/modify", {
+      const response = await fetch("http://34.16.205.25:5001/api/modify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

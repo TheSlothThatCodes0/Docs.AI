@@ -8,14 +8,14 @@ const server = http.createServer(app);
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:3000', // Replace with your React app's URL
+  origin: 'http://34.16.205.25:3000', // Replace with your React app's URL
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000', // Replace with your React app's URL
+    origin: 'http://34.16.205.25:3000', // Replace with your React app's URL
     methods: ['GET', 'POST']
   }
 });
