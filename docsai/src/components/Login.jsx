@@ -17,7 +17,8 @@ function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Logged in successfully");
-      navigate("/editor");
+      const destination = location.state?.from || "/editor";
+      navigate(destination);
     } catch (error) {
       toast.error(error.message);
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import TextEditor from '../components/TextEditor';
 import Login from '../components/Login';
 import Register from '../components/Register';
@@ -11,6 +11,7 @@ import Files from '../components/Files';
 
 function LandingPage() {
   const [user, setUser] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -30,7 +31,14 @@ function LandingPage() {
             <Route path="/register" element={user ? <Navigate to="/editor" /> : <Register />} />
             <Route path="/editor" element={user ? <TextEditor /> : <Navigate to="/login" />} />
             <Route path="/files" element={user ? <Files /> : <Navigate to="/login" />} />
-            <Route path='/collaborate' element={<TextEditor/>} />
+            <Route 
+              path='/collaborate' 
+              element={
+                user 
+                  ? <TextEditor /> 
+                  : <Navigate to="/login" state={{ from: location }} replace />
+              } 
+            />
           </Routes>
           <ToastContainer />
         </div>

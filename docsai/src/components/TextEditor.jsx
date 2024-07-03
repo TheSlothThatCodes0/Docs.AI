@@ -24,6 +24,7 @@ import Delta from "quill-delta";
 import CollaboratorCursor from "./CollaboratorCursor";
 import { useNavigate } from "react-router-dom";
 import NewUserGuide from "./NewUserGuide";
+import { Bold } from "lucide-react";
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -51,7 +52,7 @@ const TextEditor = () => {
   const [filteredContent, setFilteredContent] = useState("");
   const [title, setTitle] = useState("Untitled Document");
   const location = useLocation();
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [isContentChanged, setIsContentChanged] = useState(false);
   const [userID, setUserID] = useState("");
   const [fileName, setFileName] = useState("");
@@ -61,6 +62,7 @@ const TextEditor = () => {
   const [collaboratorCursors, setCollaboratorCursors] = useState({});
   const [userNames, setUserNames] = useState({});
   const [userColors, setUserColors] = useState({});
+  const [isProcessingPrompt, setIsProcessingPrompt] = useState(false);
   const autoSaveIntervalRef = useRef(null);
   const editorRef = useRef(null);
   const socketRef = useRef(null);
@@ -327,9 +329,27 @@ const TextEditor = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       if (value !== lastFetchedValue) {
-        const lastWords = value.split(" ").slice(-5).join(" ");
-        fetchSuggestions(lastWords);
-        setLastFetchedValue(value);
+        const quill = quillRef.current.getEditor();
+        const delta = quill.getContents();
+        
+        const extractTextContent = (delta) => {
+          return delta.ops.reduce((text, op) => {
+            if (typeof op.insert === 'string') {
+              return text + op.insert;
+            }
+            return text;
+          }, '');
+        };
+
+        const fullText = extractTextContent(delta);
+        const words = fullText.split(/\s+/);
+
+        if (words.length > 10) {
+          const context = words.join(' ').trim();
+          
+          fetchSuggestions(context);
+          setLastFetchedValue(value);
+        }
       }
     }, 1000);
 
@@ -367,7 +387,9 @@ const TextEditor = () => {
             ? quill.getSelection().index
             : quill.getLength();
           quill.formatText(promptStart, currentPosition - promptStart, {
-            color: "blue",
+            color: "#775599",
+            Bold: true,
+            italic: true,
           });
         }
       }
@@ -399,12 +421,12 @@ const TextEditor = () => {
         const generatedParagraph = data.paragraph;
 
         const quill = quillRef.current.getEditor();
-        quill.deleteText(promptStart, quill.getLength() - promptStart);
+        quill.deleteText(promptStart, "Processing...".length);
         quill.insertText(promptStart, generatedParagraph);
 
         const delta = new Delta()
           .retain(promptStart)
-          .delete(quill.getLength() - promptStart)
+          .delete("Processing...".length)
           .insert(generatedParagraph);
 
         if (socketRef.current && isConnected) {
@@ -464,9 +486,11 @@ const TextEditor = () => {
         const resizedImageDataUrl = canvas.toDataURL("image/jpeg", 0.7);
 
         const quill = quillRef.current.getEditor();
+
+        quill.deleteText(promptStart, "Processing...".length);
         const delta = new Delta()
           .retain(promptStart)
-          .delete(quill.getLength() - promptStart)
+          .delete("Processing...".length)
           .insert({ image: resizedImageDataUrl });
 
         quill.updateContents(delta);
@@ -501,7 +525,7 @@ const TextEditor = () => {
           console.log(`'/${event.key}' detected, entering prompt mode`);
           setIsPromptMode(true);
           setPromptStart(position - 1);
-          quill.formatText(position - 1, 2, { color: "blue" });
+          quill.formatText(position - 1, 2, { color: "#775599", bold: true, italic: true});
           console.log("Prompt mode activated, start position:", position - 1);
         }
       } else if (event.key === "Enter" && isPromptMode) {
@@ -514,6 +538,13 @@ const TextEditor = () => {
           .getText(promptStart, promptEnd - promptStart)
           .trim();
         console.log("Prompt text:", promptText);
+
+        // deleting the pormpt text
+        quill.deleteText(promptStart, promptEnd - promptStart);
+
+        // inserting the "processing" message
+        quill.insertText(promptStart, "Processing...", { color: "gray", italic: true});
+        setIsProcessingPrompt(true);
 
         if (promptText.startsWith("/p ")) {
           console.log("Generating paragraph with prompt:", promptText.slice(3));
@@ -699,7 +730,9 @@ const TextEditor = () => {
               ? quill.getSelection().index
               : quill.getLength();
             quill.formatText(promptStart, currentPosition - promptStart, {
-              color: "blue",
+              color: "#775599",
+              bold: true,
+              italic: true,
             });
           }
         }
