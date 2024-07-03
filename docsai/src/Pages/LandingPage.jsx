@@ -11,15 +11,21 @@ import Files from '../components/Files';
 
 function LandingPage() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
+      setLoading(false);
     });
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>; 
+  }
 
   return (
     <div className="App">
