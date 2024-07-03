@@ -147,6 +147,8 @@ const TextEditor = () => {
       if (location.state.title) {
         setTitle(location.state.title);
       }
+      setDocPath(location.state.docPath);
+      console.log("Document content loaded from location state");
     }
   }, [location]);
 
@@ -856,6 +858,7 @@ const TextEditor = () => {
         quillRef,
         userID: userID,
         fileName,
+        docPath
       }}
     >
       
@@ -877,7 +880,6 @@ const TextEditor = () => {
           handleSave={handleSave}
           onAutoSaveChange={handleAutoSaveChange}
         />
-        {/* <FilesPage quillRef={quillRef}/> */}
 
         <div
           ref={editorRef}
@@ -905,15 +907,16 @@ const TextEditor = () => {
           {currentSuggestion && (
             <span className="text-gray-400 mt-2">{currentSuggestion}</span>
           )}
+        </div>
 
-          {showPrompt && (
+        {showPrompt && (
             <div
               // className="prompt-modal"
-              className="bg-gray-400 bg-opacity-30 backdrop-blur-lg p-2 shadow-lg z-10 rounded-2xl"
+              className=" fixed z-50 bg-gray-400 bg-opacity-30 backdrop-blur-lg p-2 shadow-lg z-10 rounded-2xl"
               style={{
                 position: "absolute",
-                top: `${promptPosition.top + 35}px`,
-                left: `${promptPosition.left + 30}px`,
+                top: `${promptPosition.top + 160}px`,
+                left: `${promptPosition.left + 300}px`,
               }}
             >
               {console.log("Rendering prompt modal")}
@@ -971,7 +974,6 @@ const TextEditor = () => {
               )}
             </div>
           )}
-        </div>
         <ChatWindow content={filteredContent} />
       </div>
     </ValueContext.Provider>

@@ -24,7 +24,7 @@ import axios from "axios";
 export default function MenuButtons() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
-  const { fullContent, title, quillRef, userID, fileName } = useValue();
+  const { fullContent, title, quillRef, userID, fileName, docPath } = useValue();
   const fileInputRef = useRef(null);
 
   const handleDownload = async () => {

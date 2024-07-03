@@ -17,7 +17,7 @@ const FilesPage = () => {
       const blob = await getBlob(file.fileContentRef);
       const contentJson = JSON.parse(await blob.text());
       const filePath = file.fileContentRef.fullPath.replace('/file_contents.json', '');
-      navigate('/editor', { state: { content: contentJson, title: file.fileName}});
+      navigate('/editor', { state: { content: contentJson, title: file.fileName, filePath: filePath}});
     } catch (error) {
       console.error("Error loading file content:", error);
     }
