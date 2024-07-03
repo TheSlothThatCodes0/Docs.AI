@@ -29,7 +29,7 @@ const ChatWindow = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5001/api/chat-window', { 
+      const response = await axios.post('http://34.16.205.25:5001/api/chat-window', { 
         messages: updatedMessages, 
         value: filteredContent
       });
