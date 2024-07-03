@@ -720,7 +720,10 @@ const TextEditor = () => {
   const handleSave = useCallback(async () => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        userID == "" ? setUserID(user.uid) : null;
+        if (userID == "") {
+          setUserID(user.uid);
+        }
+        
         setCurrentUserID(user.uid);
         console.log("User ID:", user.uid);
         const quill = quillRef.current.getEditor();
@@ -755,7 +758,10 @@ const TextEditor = () => {
           ).slice(-2)}${("0" + currentDate.getMinutes()).slice(-2)}${(
             "0" + currentDate.getSeconds()
           ).slice(-2)}`;
-          fileName == "" ? setFileName(formattedDateTime) : null;
+          if (fileName == "") {
+            setFileName(formattedDateTime);
+          }
+          
 
           const basePath =
             docPath || `users/${user.uid}/documents/${formattedDateTime}`;
