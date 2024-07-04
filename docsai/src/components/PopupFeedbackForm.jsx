@@ -24,7 +24,7 @@ const SimplifiedFeedbackModal = () => {
           recipientEmail: 'audionotedev@gmail.com'
         }),
       });
-
+      // console.log('Feedback response:', response);
       if (response.ok) {
         setSubmitMessage('Feedback submitted successfully!');
         setFeedback('');

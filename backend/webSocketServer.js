@@ -8,14 +8,14 @@ const server = http.createServer(app);
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://docsai.one', // Replace with your React app's URL
+  origin: ['http://docsai.one', 'localhost:3000', 'http://36.16.205.25'], // Replace with your React app's URL
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://docsai.one', // Replace with your React app's URL
+    origin: ['http://docsai.one', 'localhost:3000', 'http://36.16.205.25'], // Replace with your React app's URL
     methods: ['GET', 'POST']
   }
 });
