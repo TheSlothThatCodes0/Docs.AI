@@ -33,7 +33,7 @@ Transform the way you create, collaborate, and communicate with Docs.AI. Whether
 
 https://github.com/TheSlothThatCodes0/Docs.AI/assets/109855930/75bb0661-bb6d-4d8f-8b0d-621a0a601c03
 
-
+LinkedIn Post: https://www.linkedin.com/feed/update/urn:li:activity:7214568701470101504/
 
 
 ## Want to use it for yourself?
