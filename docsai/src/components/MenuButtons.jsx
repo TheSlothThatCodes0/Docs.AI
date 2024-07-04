@@ -118,6 +118,8 @@ export default function MenuButtons() {
     ) {
       if (quillRef.current) {
         navigate("/editor")
+        quillRef.current.getEditor().setText("");
+        title.current.value = "";
       }
     }
   };
