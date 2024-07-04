@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5001;
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(cors());
 require("dotenv").config();
 
