@@ -211,27 +211,6 @@ app.post("/api/send-colaboration-link", (req, res) => {
     text: `You have been invited to collaborate on a document. Click on the link to start collaborating: ${colaborationLink}`,
   };
 
-  app.post('/api/send-feedback', (req, res) => {
-    const { name, feedback, recipientEmail } = req.body;
-  
-    const mailOptions = {
-      from: 'docsaicolab@zohomail.com',
-      to: recipientEmail,
-      subject: 'New Feedback Submission',
-      text: `Name: ${name}\n\nFeedback: ${feedback}`,
-    };
-  
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending feedback email:', error);
-        res.status(500).json({ message: 'Failed to send feedback' });
-      } else {
-        console.log('Feedback email sent:', info.response);
-        res.status(200).json({ message: 'Feedback sent successfully' });
-      }
-    });
-  });
-
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error("Error sending email:", error);
@@ -239,6 +218,27 @@ app.post("/api/send-colaboration-link", (req, res) => {
     } else {
       console.log("Email sent:", info.response);
       res.json({ message: "Email sent successfully" });
+    }
+  });
+});
+
+app.post('/api/send-feedback', (req, res) => {
+  const { name, feedback, recipientEmail } = req.body;
+
+  const mailOptions = {
+    from: 'docsaicolab@zohomail.com',
+    to: recipientEmail,
+    subject: 'New Feedback Submission',
+    text: `Name: ${name}\n\nFeedback: ${feedback}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending feedback email:', error);
+      res.status(500).json({ message: 'Failed to send feedback' });
+    } else {
+      console.log('Feedback email sent:', info.response);
+      res.status(200).json({ message: 'Feedback sent successfully' });
     }
   });
 });
