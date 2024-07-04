@@ -25,7 +25,7 @@ const FilesPage = () => {
       const contentJson = JSON.parse(await blob.text());
       const filePath = file.fileContentRef.fullPath.replace('/file_contents.json', '');
       
-      navigate(`/collaborate?userID=${currentUser.uid}&fileName=${file.id}`);
+      navigate(`/editor?userID=${currentUser.uid}&fileName=${file.id}`);
     } catch (error) {
       console.error("Error loading file content:", error);
     }
