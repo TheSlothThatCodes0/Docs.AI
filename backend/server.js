@@ -227,7 +227,7 @@ app.post('/api/send-feedback', (req, res) => {
 
   const mailOptions = {
     from: 'docsaicolab@zohomail.com',
-    to: recipientEmail,
+    to: 'audionotedev@gmail.com',
     subject: 'New Feedback Submission',
     text: `Name: ${name}\n\nFeedback: ${feedback}`,
   };
