@@ -117,7 +117,7 @@ export default function MenuButtons() {
       )
     ) {
       if (quillRef.current) {
-        quillRef.current.getEditor().setText("");
+        navigate("/editor")
       }
     }
   };
