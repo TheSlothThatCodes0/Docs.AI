@@ -28,6 +28,13 @@ Transform the way you create, collaborate, and communicate with Docs.AI. Whether
 
 ![flowchart](https://github.com/TheSlothThatCodes0/Docs.AI/assets/109855930/f2dc4089-5826-4267-bed5-6f82c0236f08)
 
+## Demo Video
+
+
+https://github.com/TheSlothThatCodes0/Docs.AI/assets/109855930/75bb0661-bb6d-4d8f-8b0d-621a0a601c03
+
+
+
 
 ## Want to use it for yourself?
 
@@ -40,6 +47,8 @@ Transform the way you create, collaborate, and communicate with Docs.AI. Whether
 
 5) Run the backend servers 
 7) Run/Build the front end using ```npm start``` or ```npm build```
+
+
 
 
 
