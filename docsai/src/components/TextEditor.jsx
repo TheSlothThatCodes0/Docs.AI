@@ -918,7 +918,7 @@ const TextEditor = () => {
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
 
         <NewUserGuide />
-        <PopupFeedbackForm recipientEmail="audionotedev@gmail.com" />
+        <PopupFeedbackForm url="https://forms.gle/d3EXasr4NczneG6CA" />
         <AutoTitle
           content={filteredContent}
           title={title}
