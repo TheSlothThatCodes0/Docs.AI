@@ -10,7 +10,7 @@ const FeedbackButton = ({ url }) => {
   return (
     <button
       onClick={handleClick}
-      className="bg-white text-black hover:bg-gray-100 px-4 py-2 rounded absolute bottom-5 left-24 text-sm font-medium"
+      className="fixed bg-white text-black hover:bg-gray-100 px-4 py-2 rounded bottom-5 left-24 text-sm font-medium"
       style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)' }}
     >
       Feedback
