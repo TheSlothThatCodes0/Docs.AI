@@ -160,7 +160,7 @@ const TextEditor = () => {
     const queryParams = new URLSearchParams(location.search);
     const URL_userID = queryParams.get("userID");
     const URL_fileName = queryParams.get("fileName");
-
+    
     if (URL_userID !== null && URL_fileName != null) {
       setDocPath(`users/${URL_userID}/documents/${URL_fileName}`);
       setUserID(URL_userID);
