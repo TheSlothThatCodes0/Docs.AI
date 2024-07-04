@@ -25,6 +25,7 @@ import CollaboratorCursor from "./CollaboratorCursor";
 import { useNavigate } from "react-router-dom";
 import NewUserGuide from "./NewUserGuide";
 import { Bold } from "lucide-react";
+import PopupFeedbackForm from "./PopupFeedbackForm";
 
 const auth = getAuth();
 const ValueContext = createContext();
@@ -770,7 +771,7 @@ const TextEditor = () => {
   const handleSave = useCallback(async () => {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        if (userID == "") {
+        if (userID === "") {
           setUserID(user.uid);
         }
         
@@ -917,7 +918,7 @@ const TextEditor = () => {
       <div className="flex flex-col items-center pt-20 bg-gray-200 min-h-screen">
 
         <NewUserGuide />
-        
+        <PopupFeedbackForm recipientEmail="audionotedev@gmail.com" />
         <AutoTitle
           content={filteredContent}
           title={title}

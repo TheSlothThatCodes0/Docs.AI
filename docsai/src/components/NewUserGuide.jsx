@@ -8,7 +8,7 @@ const NewUserGuide = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-4 bg-white shadow-lg rounded-full p-3 hover:bg-gray-100 transition-colors w-11 h-11"
+        className="fixed bottom-5 left-5 bg-white shadow-lg rounded-full p-3 hover:bg-gray-100 transition-colors w-11 h-11"
       >
         <span className="sr-only">Open guide</span>
         ?
@@ -30,7 +30,7 @@ const NewUserGuide = () => {
         </ul>
         <button
           onClick={() => setIsOpen(false)}
-          className="fixed bottom-4 left-4 bg-white shadow-lg rounded-full p-3 hover:bg-gray-100 transition-colors"
+          className="fixed bottom-5 left-5 bg-white shadow-lg rounded-full p-3 hover:bg-gray-100 transition-colors"
           aria-label="Close guide"
         >
           <X className="w-5 h-5" />
